@@ -13,6 +13,8 @@
 #include "imgui/imgui.h"
 #include "mq/imgui/ImGuiUtils.h"
 #include <sol/sol.hpp>
+#include "Ui.h"
+#include "main\MQ2Inlines.h"
 
 PreSetup("MQAnimatedNameplates");
 PLUGIN_VERSION(0.1);
@@ -304,46 +306,131 @@ PLUGIN_API void OnZoned()
  * Because this happens extremely frequently, it is recommended to move any actual
  * work to a separate call and use this only for updating the display.
  */
+
 PLUGIN_API void OnUpdateImGui()
 {
-	/*
 	if (GetGameState() == GAMESTATE_INGAME)
 	{
 		if (!pTarget || !pDisplay)
 			return;
 
 		const CVector3 targetPos(pTarget->Y , pTarget->X , pTarget->Z + pTarget->Height);
-		float outX, outY;
+		float targetNameplatePosX, targetNameplatePosY;
 
-		pDisplay->pCamera->ProjectWorldCoordinatesToScreen(targetPos, outX, outY);
+		pDisplay->pCamera->ProjectWorldCoordinatesToScreen(targetPos, targetNameplatePosX, targetNameplatePosY);
 		bool open = true;
 
 		auto drawList = ImGui::GetForegroundDrawList();
-		ImGui::PushFont(NULL, 40);
+		ImGui::PushFont(NULL, Ui::Settings.FontSize);
 
-		const char* text_str = pTarget->DisplayedName;
+		const char* targetName = pTarget->DisplayedName;
+		int pctHP = pTarget->HPMax == 0 ? 0 : pTarget->HPCurrent * 100 / pTarget->HPMax;
+		char targetPctHPs[16];
+		sprintf(targetPctHPs, "%d%%", pctHP);
 
-		ImVec2 textSize = ImGui::CalcTextSize(text_str);
-		ImVec2 padding(8, 4);
-		ImVec2 min(outX - textSize.x / 2, outY);
-		ImVec2 max(outX + textSize.x / 2, outY + textSize.y);
-		ImVec2 min_rect(min.x - padding.x, min.y - padding.y);
-		ImVec2 max_rect(max.x + padding.x, max.y + padding.y);
+		char classInfo[64];
+		sprintf(classInfo, "%d %s",
+			static_cast<int>(pTarget->GetLevel()),
+			GetClassDesc(pTarget->GetClass()));
 
-		drawList->AddText(min, IM_COL32(250, 40, 40, 255), text_str);
-		
-		drawList->AddRect(
-			min_rect,
-			max_rect,
-			IM_COL32(0, 255, 0, 255),
-			3,
+		ImVec2 canvasSize(500, 50);
+
+		int buffCount = GetCachedBuffCount(pTarget);
+
+		ImVec2 assumedHeadOffset(
 			0,
-			1.5
+			35 + (ceil(buffCount / 10.0f) * (Ui::Settings.IconSize + Ui::Settings.Padding.y))
 		);
 
+		ImVec2 curPos(
+			targetNameplatePosX - canvasSize.x * 0.5f - assumedHeadOffset.x,
+			targetNameplatePosY - canvasSize.y * 0.5f - assumedHeadOffset.y
+		);
+
+		Ui::SetCursorPos(ImVec2(
+			curPos.x + Ui::Settings.Padding.x,
+			curPos.y + Ui::Settings.Padding.y
+		));
+		int buffsPerRow = std::floor(canvasSize.x / (Ui::Settings.IconSize + Ui::Settings.Padding.x));
+
+		for (int i = 0; i < buffCount; i++)
+		{
+			auto buff = GetCachedBuffAtSlot(pTarget, i);
+
+			if (buff.has_value())
+			{
+				EQ_Spell* spell = GetSpellByID(buff->spellId);
+				if (spell)
+				{
+					Ui::DrawInspectableSpellIcon(spell->SpellIcon, spell);
+
+					if (i == 0 || (i < (buffCount-1) && i % buffsPerRow != 0))
+						Ui::SameLine();
+				}
+			}
+		}
+
+		ImVec2 panelPos = Ui::GetCursorPos();
+		
+		Ui::RenderNamePlateRect(
+			canvasSize,
+			Ui::ImVec4ToColor(ImVec4(0.6f, 0.6f, 0.6f, 0.8f)),
+			2,
+			0,
+			true
+		);
+
+		panelPos.x += Ui::Settings.Padding.x;
+
+		Ui::SetCursorPos(panelPos);
+
+		ImU32 textColor = IM_COL32(255, 255, 255, 255);
+
+		auto con = Ui::GetConColorBySpawn(pTarget);
+		ImU32 conColor = IM_COL32(
+			(int)(con.w * 255),
+			(int)(con.x * 255),
+			(int)(con.y * 255),
+			(int)(con.z * 255)
+		);
+
+		curPos = Ui::GetCursorPos();
+		float startXPos = curPos.x;
+
+		Ui::RenderNamePlateText(textColor, targetName);
+		
+		// center this text
+		float classWidth = ImGui::CalcTextSize(classInfo).x;
+		curPos.x = (curPos.x + canvasSize.x / 2) -
+			(classWidth / 2 + Ui::Settings.Padding.x * 2);
+
+		Ui::SetCursorPos(curPos);
+		Ui::RenderNamePlateText(textColor, classInfo);
+
+		// right justify this text
+		float hpWidth = ImGui::CalcTextSize(targetPctHPs).x;
+		curPos.x = (startXPos + canvasSize.x) -
+			(hpWidth + Ui::Settings.Padding.x * 2);
+
+		Ui::SetCursorPos(curPos);
+		Ui::RenderNamePlateText(textColor, targetPctHPs);
+
+		Ui::SetCursorPos(ImVec2(startXPos, Ui::GetCursorPos().y));
+
+		std::string hpBarID =
+			std::string("TargetHPBar_") +
+			std::to_string(pTarget->GetId());
+
+		Ui::RenderFancyHPBar(
+			hpBarID.c_str(),
+			pctHP,
+			ImGui::GetTextLineHeight() * 0.75f,
+			canvasSize.x - Ui::Settings.Padding.x * 2,
+			conColor,
+			""
+		);
 		ImGui::PopFont();
 	}
-	*/
 }
 
 /**
