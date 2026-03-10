@@ -43,7 +43,8 @@ void DrawNameplates(PSPAWNINFO pSpawn)
 	ImVec2 canvasSize(Ui::Settings.GetNameplateWidth(), 50);
 	float baseHeadOffset = 35.0f;
 
-	if (Ui::Settings.GetShowBuffIcons())
+	// only render for target.
+	if (Ui::Settings.GetShowBuffIcons() && pTarget == pSpawn)
 	{
 		int buffsPerRow = static_cast<int>(floor(canvasSize.x / (Ui::Settings.GetIconSize() + Ui::Settings.GetPadding().x)));
 
