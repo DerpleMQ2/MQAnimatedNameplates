@@ -36,7 +36,7 @@ void DrawNameplates(PlayerClient* pSpawn)
 		targetNameplatePosY = 75; // move off-screen if above a certain height so it doesn't draw in the middle of the screen when looking up at something.
 	const ImVec2 targetNameplatePos{ targetNameplatePosX, targetNameplatePosY };
 	
-	ImVec2 targetNameplateTopLeft{ INFINITY, INFINITY };
+	ImVec2 targetNameplateTopLeft{ FLT_MAX, FLT_MAX };
 	ImVec2 targetNameplateBottomRight{ 0.0f, 0.0f };
 
 	ImGui::PushFont(nullptr, Ui::Settings.GetFontSize());
@@ -249,9 +249,9 @@ PLUGIN_API void OnUpdateImGui()
 		}
 		if (Ui::Settings.GetRenderForAllHaters())
 		{
-			if (pLocalPC && pLocalPC->pXTargetMgr)
+			if (pLocalPC)
 			{
-				ExtendedTargetList* xtm = pLocalPC->pXTargetMgr;
+				ExtendedTargetList* xtm = pLocalPC->pExtendedTargetList;
 
 				for (int i = 0; i < xtm->GetNumSlots(); i++)
 				{
@@ -259,10 +259,12 @@ PLUGIN_API void OnUpdateImGui()
 
 					if (xts->SpawnID && xts->xTargetType == XTARGET_AUTO_HATER)
 					{
-						if (PlayerClient * pSpawn = GetSpawnByID(xts->SpawnID))
+						if (!Ui::Settings.GetRenderForTarget() || !pTarget || xts->SpawnID != pTarget->SpawnID)
 						{
-							if (!Ui::Settings.GetRenderForTarget() || !pTarget || pSpawn->SpawnID != pTarget->SpawnID)
+							if (PlayerClient* pSpawn = GetSpawnByID(xts->SpawnID))
+							{
 								DrawNameplates(pSpawn);
+							}
 						}
 					}
 				}

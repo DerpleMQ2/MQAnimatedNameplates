@@ -108,7 +108,7 @@ private:
 	bool m_showLevel = true;
 	bool m_showClass = true;
 	bool m_shortClassName = false;
-	bool m_renderToForeground = true;
+	bool m_renderToForeground = false;
 	bool m_renderNoLOS = false;
 
 	bool m_showBuffIcons = true;
