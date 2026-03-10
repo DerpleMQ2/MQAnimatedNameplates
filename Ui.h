@@ -87,6 +87,7 @@ private:
 	bool m_showGuild = true;
 	bool m_showPurpose = true;
 
+
 	bool m_showBuffIcons = true;
 	bool m_showDebugPanel = false;
 
@@ -101,6 +102,7 @@ private:
 	std::string m_configFile = "MQAnimatedNameplates.yaml";
 	YAML::Node m_configNode;
 };
+
 extern AnimatedNameplatesSettings Settings;
 
 void RenderNamePlateText(CursorState& cursor, ImU32 color, const char* text);

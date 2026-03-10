@@ -347,23 +347,23 @@ void Ui::RenderSettingsPanel()
 		Settings.SetShowPurpose(showPurpose);
 
 	float nameplateWidth = Settings.GetNameplateWidth();
-	if (ImGui::SliderFloat("Nameplate Width", &nameplateWidth, 100.0f, 1500.0f))
+	if (ImGui::InputFloat("Nameplate Width", &nameplateWidth, 1.0f, 5.0f, "%.1f"))
 		Settings.SetNameplateWidth(nameplateWidth);
 
 	float fontSize = Settings.GetFontSize();
-	if (ImGui::SliderFloat("Font Size", &fontSize, 10.0f, 30.0f))
+	if (ImGui::InputFloat("Font Size", &fontSize, 1.0f, 5.0f, "%.1f"))
 		Settings.SetFontSize(fontSize);
 
 	float iconSize = Settings.GetIconSize();
-	if (ImGui::SliderFloat("Icon Size", &iconSize, 10.0f, 100.0f))
+	if (ImGui::InputFloat("Icon Size", &iconSize, 1.0f, 5.0f, "%.1f"))
 		Settings.SetIconSize(iconSize);
 
 	float barRounding = Settings.GetBarRounding();
-	if (ImGui::SliderFloat("Bar Rounding", &barRounding, 0.0f, 20.0f))
+	if (ImGui::InputFloat("Bar Rounding", &barRounding, 1.0f, 5.0f, "%.1f"))
 		Settings.SetBarRounding(barRounding);
 
 	float barBorderThickness = Settings.GetBarBorderThickness();
-	if (ImGui::SliderFloat("Bar Border Thickness", &barBorderThickness, 0.0f, 10.0f))
+	if (ImGui::InputFloat("Bar Border Thickness", &barBorderThickness, 1.0f, 5.0f, "%.1f"))
 		Settings.SetBarBorderThickness(barBorderThickness);
 }
 
@@ -439,8 +439,7 @@ static void Normalize2fOverZero(float& x, float& y)
 	const float d2 = x * x + y * y;
 	if (d2 > 0.0f)
 	{
-		// ImRsqrt is provided by imgui_internal.h
-		const float inv_len = 1.0f / sqrt(d2);
+		const float inv_len = ImRsqrt(d2);
 		x *= inv_len;
 		y *= inv_len;
 	}
