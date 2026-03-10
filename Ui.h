@@ -65,6 +65,7 @@ public:
 	void SetNameplateWidth(float width) { m_nameplateWidth = width; m_configNode["NameplateWidth"] = width; SaveSettings(); }
 	void SetShowGuild(bool show) { m_showGuild = show; m_configNode["ShowGuild"] = show; SaveSettings(); }
 	void SetShowPurpose(bool show) { m_showPurpose = show; m_configNode["ShowPurpose"] = show; SaveSettings(); }
+	void SetRenderToForeground(bool show) { m_renderToForeground = show; m_configNode["RenderToForeground"] = show; SaveSettings(); }
 
 	bool GetShowBuffIcons() const { return m_showBuffIcons; }
 	const ImVec2& GetPadding() const { return m_padding; }
@@ -79,13 +80,16 @@ public:
 	float GetNameplateWidth() const { return m_nameplateWidth; }
 	bool GetShowGuild() const { return m_showGuild; }
 	bool GetShowPurpose() const { return m_showPurpose; }
+	bool GetRenderToForeground() const { return m_renderToForeground; }
 
 private:
+
 	bool m_renderForSelf = true;
 	bool m_renderForTarget = true;
 	bool m_renderForGroup = true;
 	bool m_showGuild = true;
 	bool m_showPurpose = true;
+	bool m_renderToForeground = true;
 
 	bool m_showBuffIcons = true;
 	bool m_showDebugPanel = false;
@@ -118,6 +122,8 @@ void RenderFancyHPBar(CursorState& cursor, const std::string& id, float hpPct, f
 	const std::string& label = "");
 
 void RenderSettingsPanel();
+
+ImDrawList* GetDrawList();
 
 } // namespace Ui
 

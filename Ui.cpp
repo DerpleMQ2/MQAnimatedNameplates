@@ -20,7 +20,7 @@ void Ui::RenderNamePlateText(CursorState& cursor, ImU32 color, const char* text)
 {
 	ImVec2 size = ImGui::CalcTextSize(text);
 
-	ImDrawList* dl = ImGui::GetForegroundDrawList();
+	ImDrawList* dl = Ui::GetDrawList();
 	dl->AddText(cursor.GetPos(), color, text);
 
 	cursor.Move(size);
@@ -29,7 +29,7 @@ void Ui::RenderNamePlateText(CursorState& cursor, ImU32 color, const char* text)
 void Ui::RenderNamePlateRect(CursorState& cursor, const ImVec2& size, ImU32 color, float rounding,
 	float thickness, bool filled)
 {
-	ImDrawList* dl = ImGui::GetForegroundDrawList();
+	ImDrawList* dl = Ui::GetDrawList();
 
 	ImVec2 max(cursor.GetPos() + size);
 
@@ -51,7 +51,7 @@ void Ui::DrawInspectableSpellIcon(CursorState& cursor, EQ_Spell* pSpell)
 	ImVec2 size(Settings.GetIconSize(), Settings.GetIconSize());
 	ImVec2 max(cursorPos + size);
 
-	ImDrawList* dl = ImGui::GetForegroundDrawList();
+	ImDrawList* dl = Ui::GetDrawList();
 	ImVec2 mouse = ImGui::GetIO().MousePos;
 
 	bool hovered = mouse.x >= cursorPos.x && mouse.x <= max.x
@@ -86,7 +86,7 @@ void Ui::RenderAnimatedPercentage(CursorState& cursor, const std::string& id, fl
 
 	// FIXME: This should be accumulated time, not absolute time.
 	float now = static_cast<float>(ImGui::GetTime());
-	ImDrawList* drawList = ImGui::GetForegroundDrawList();
+	ImDrawList* drawList = Ui::GetDrawList();
 
 	AnimState& animState = State.ProgBarAnimState[id];
 
@@ -322,6 +322,10 @@ void Ui::RenderSettingsPanel()
 	if (ImGui::Checkbox("Show Debug Panel", &showDebugPanel))
 		Settings.SetShowDebugPanel(showDebugPanel);
 
+	bool renderToForeground = Settings.GetRenderToForeground();
+	if (ImGui::Checkbox("Render To Foreground", &renderToForeground))
+		Settings.SetRenderToForeground(renderToForeground);
+
 	bool showBuffIcons = Settings.GetShowBuffIcons();
 	if (ImGui::Checkbox("Show Buff Icons", &showBuffIcons))
 		Settings.SetShowBuffIcons(showBuffIcons);
@@ -387,6 +391,7 @@ void Ui::AnimatedNameplatesSettings::LoadSettings()
 		m_nameplateWidth = m_configNode["NameplateWidth"].as<float>(m_nameplateWidth);
 		m_showGuild = m_configNode["ShowGuild"].as<bool>(m_showGuild);
 		m_showPurpose = m_configNode["ShowPurpose"].as<bool>(m_showPurpose);
+		m_renderToForeground = m_configNode["RenderToForeground"].as<bool>(m_renderToForeground);
 
 		m_padding = ImVec2(
 			m_configNode["PaddingX"].as<float>(m_padding.x),
@@ -429,6 +434,11 @@ void Ui::AnimatedNameplatesSettings::SaveSettings()
 	{
 		SPDLOG_ERROR("Failed to write settings file: {}", m_configFile);
 	}
+}
+
+ImDrawList* Ui::GetDrawList()
+{
+	return Ui::Settings.GetRenderToForeground() ? ImGui::GetForegroundDrawList() : ImGui::GetBackgroundDrawList();
 }
 
 // Helpers from imgui_draw.cpp
