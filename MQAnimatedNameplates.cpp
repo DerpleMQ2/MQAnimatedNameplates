@@ -27,55 +27,71 @@ void DrawNameplates()
 	pDisplay->pCamera->ProjectWorldCoordinatesToScreen(targetPos, targetNameplatePosX, targetNameplatePosY);
 	bool open = true;
 
-	ImGui::PushFont(nullptr, Ui::Settings.FontSize);
+	ImGui::PushFont(nullptr, Ui::Settings.GetFontSize());
 
 	const char* targetName = pTarget->DisplayedName;
-	int pctHP = pTarget->HPMax == 0 ? 0 : pTarget->HPCurrent * 100 / pTarget->HPMax;
+	float pctHP = pTarget->HPMax == 0 ? 0 : pTarget->HPCurrent * 100.0f / pTarget->HPMax;
 	char targetPctHPs[16];
-	sprintf_s(targetPctHPs, "%d%%", pctHP);
+	sprintf_s(targetPctHPs, "%g%%", pctHP);
 
 	char classInfo[64];
 	sprintf_s(classInfo, "%d %s", pTarget->GetLevel(), GetClassDesc(pTarget->GetClass()));
 
 	ImVec2 canvasSize(500, 50);
+	float baseHeadOffset = 35.0f;
 
-	int buffCount = GetCachedBuffCount(pTarget);
-
-	ImVec2 assumedHeadOffset(
-		0,
-		35 + (ceil(buffCount / 10.0f) * (Ui::Settings.IconSize + Ui::Settings.Padding.y))
-	);
-
-	ImVec2 curPos(
-		targetNameplatePosX - canvasSize.x * 0.5f - assumedHeadOffset.x,
-		targetNameplatePosY - canvasSize.y * 0.5f - assumedHeadOffset.y
-	);
-
-	CursorState cursor{ curPos };
-
-	int buffsPerRow = std::floor(canvasSize.x / (Ui::Settings.IconSize + Ui::Settings.Padding.x));
-
-	for (int i = 0; i < buffCount; i++)
+	if (Ui::Settings.GetShowBuffIcons())
 	{
-		auto buff = GetCachedBuffAtSlot(pTarget, i);
+		int buffsPerRow = static_cast<int>(floor(canvasSize.x / (Ui::Settings.GetIconSize() + Ui::Settings.GetPadding().x)));
 
-		if (buff.has_value())
+		int buffCount = Ui::Settings.GetShowBuffIcons() ? GetCachedBuffCount(pTarget) : 0;
+
+		double numBuffRows = ceil(buffCount / static_cast<float>(buffsPerRow));
+
+		float verticalOffset = static_cast<float>(numBuffRows) * (Ui::Settings.GetIconSize() + Ui::Settings.GetPadding().y);
+
+		ImVec2 assumedHeadOffset(
+			0,
+			baseHeadOffset + verticalOffset
+		);
+
+		ImVec2 curPos(
+			targetNameplatePosX - canvasSize.x * 0.5f - assumedHeadOffset.x,
+			targetNameplatePosY - canvasSize.y * 0.5f - assumedHeadOffset.y
+		);
+
+		// this draws above the nameplate so we can use a seperate cursor for it since it will not change the cursor for the plate.
+		CursorState cursor{ curPos };
+		for (int i = 0; i < buffCount; i++)
 		{
-			if (EQ_Spell* spell = GetSpellByID(buff->spellId))
-			{
-				Ui::DrawInspectableSpellIcon(cursor, spell);
+			auto buff = GetCachedBuffAtSlot(pTarget, i);
 
-				if (i == 0 || (i < (buffCount - 1) && i % buffsPerRow != 0))
-					cursor.SameLine();
+			if (buff.has_value())
+			{
+				if (EQ_Spell* spell = GetSpellByID(buff->spellId))
+				{
+					Ui::DrawInspectableSpellIcon(cursor, spell);
+
+					if (i == 0 || ((i+1) < buffCount) && ((i+1) % buffsPerRow) != 0)
+						cursor.SameLine();
+				}
 			}
 		}
 	}
 
+	CursorState cursor{
+		ImVec2(
+			targetNameplatePosX - canvasSize.x * 0.5f,
+			targetNameplatePosY - canvasSize.y * 0.5f - baseHeadOffset
+		) 
+	};
+
 	ImVec2 panelPos = cursor.GetPos();
 
-	Ui::RenderNamePlateRect(cursor, canvasSize, IM_COL32(153, 153, 153, 204), 2, 0, true);
+	if (Ui::Settings.GetShowDebugPanel())
+		Ui::RenderNamePlateRect(cursor, canvasSize, IM_COL32(153, 153, 153, 204), 2, 0, true);
 
-	panelPos.x += Ui::Settings.Padding.x;
+	panelPos.x += Ui::Settings.GetPadding().x;
 
 	cursor.SetPos(panelPos);
 
@@ -83,7 +99,7 @@ void DrawNameplates()
 
 	ImU32 conColor = ConColorToARGB(ConColor(pTarget));
 
-	curPos = cursor.GetPos();
+	ImVec2 curPos(cursor.GetPos());
 	float startXPos = curPos.x;
 
 	Ui::RenderNamePlateText(cursor, textColor, targetName);
@@ -91,7 +107,7 @@ void DrawNameplates()
 	// center this text
 	float classWidth = ImGui::CalcTextSize(classInfo).x;
 	curPos.x = (curPos.x + canvasSize.x / 2) -
-		(classWidth / 2 + Ui::Settings.Padding.x * 2);
+		(classWidth / 2 + Ui::Settings.GetPadding().x * 2);
 
 	cursor.SetPos(curPos);
 	Ui::RenderNamePlateText(cursor, textColor, classInfo);
@@ -99,7 +115,7 @@ void DrawNameplates()
 	// right justify this text
 	float hpWidth = ImGui::CalcTextSize(targetPctHPs).x;
 	curPos.x = (startXPos + canvasSize.x) -
-		(hpWidth + Ui::Settings.Padding.x * 2);
+		(hpWidth + Ui::Settings.GetPadding().x * 2);
 
 	cursor.SetPos(curPos);
 	Ui::RenderNamePlateText(cursor, textColor, targetPctHPs);
@@ -115,7 +131,7 @@ void DrawNameplates()
 		hpBarID,
 		pctHP,
 		ImGui::GetTextLineHeight() * 0.75f,
-		canvasSize.x - Ui::Settings.Padding.x * 2,
+		canvasSize.x - Ui::Settings.GetPadding().x * 2,
 		conColor,
 		""
 	);
@@ -124,10 +140,12 @@ void DrawNameplates()
 
 PLUGIN_API void InitializePlugin()
 {
+	AddSettingsPanel("plugins/Nameplates", Ui::RenderSettingsPanel);
 }
 
 PLUGIN_API void ShutdownPlugin()
 {
+	RemoveSettingsPanel("plugins/Nameplates");
 }
 
 PLUGIN_API void OnUpdateImGui()

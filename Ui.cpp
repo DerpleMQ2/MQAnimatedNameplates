@@ -1,13 +1,19 @@
 #include "Ui.h"
 #include "eqlib/EQLib.h"
 #include "mq/imgui/Widgets.h"
+#include "imgui/ImGuiUtils.h"
 
+#include <mq/Plugin.h>
+
+#include <fstream>
 #include <algorithm>
 #include <cmath>
 
 using namespace eqlib;
 
-Ui::SettingsStruct Ui::Settings;
+Ui::AnimatedNameplatesSettings Ui::Settings;
+
+Ui::StateStruct Ui::State;
 
 void Ui::RenderNamePlateText(CursorState& cursor, ImU32 color, const char* text)
 {
@@ -46,7 +52,7 @@ void Ui::RenderNamePlateRect(
 void Ui::DrawInspectableSpellIcon(CursorState& cursor, EQ_Spell* pSpell)
 {
 	const ImVec2& cursorPos = cursor.GetPos();
-	ImVec2 size(Settings.IconSize, Settings.IconSize);
+	ImVec2 size(Settings.GetIconSize(), Settings.GetIconSize());
 	ImVec2 max(cursorPos + size);
 
 	ImDrawList* dl = ImGui::GetForegroundDrawList();
@@ -110,7 +116,7 @@ void Ui::RenderAnimatedPercentage(
 	float now = static_cast<float>(ImGui::GetTime());
 	ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
-	AnimState& animState = Settings.ProgBarAnimState[id];
+	AnimState& animState = State.ProgBarAnimState[id];
 
 	if (animState.lastTarget == 0)
 		animState.lastTarget = targetPct;
@@ -125,7 +131,7 @@ void Ui::RenderAnimatedPercentage(
 
 	float fraction = pct / 100.0f;
 
-	TrendState& trend = Settings.ProgBarTrendState[id];
+	TrendState& trend = State.ProgBarTrendState[id];
 
 	if (trend.lastPct == 0)
 	{
@@ -165,7 +171,7 @@ void Ui::RenderAnimatedPercentage(
 		ImVec2(minX + 1, minY + 1),
 		ImVec2(maxX - 1, minY + std::max(2.0f, barH * 0.35f)),
 		IM_COL32(255, 255, 255, 14),
-		Settings.BarRounding
+		Settings.GetBarRounding()
 	);
 
 	float fillWidth = barW * fraction;
@@ -193,7 +199,7 @@ void Ui::RenderAnimatedPercentage(
 		float fillMaxX = minX + fillWidth;
 
 		float fillRounding = std::min(
-			Settings.BarRounding,
+			Settings.GetBarRounding(),
 			std::min(barH * 0.5f, fillWidth * 0.5f)
 		);
 
@@ -295,9 +301,9 @@ void Ui::RenderAnimatedPercentage(
 		ImVec2(minX, minY),
 		ImVec2(maxX, maxY),
 		colHighlight,
-		Settings.BarRounding,
+		Settings.GetBarRounding(),
 		0,
-		Settings.BarBorderThickness
+		Settings.GetBarBorderThickness()
 	);
 
 	std::string text = label.empty()
@@ -338,4 +344,93 @@ void Ui::RenderFancyHPBar(
 		hpHighlight,
 		label
 	);
+}
+
+void Ui::RenderSettingsPanel() 
+{
+	ImGui::PushFont(mq::imgui::LargeTextFont);
+	ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.2f, 1.0f), "Nameplate Settings");
+	ImGui::Separator();
+	ImGui::PopFont();
+
+	bool showDebugPanel = Settings.GetShowDebugPanel();
+	if (ImGui::Checkbox("Show Debug Panel", &showDebugPanel))
+		Settings.SetShowDebugPanel(showDebugPanel);
+
+	bool showBuffIcons = Settings.GetShowBuffIcons();
+	if (ImGui::Checkbox("Show Buff Icons", &showBuffIcons))
+		Settings.SetShowBuffIcons(showBuffIcons);
+
+	float fontSize = Settings.GetFontSize();
+	if (ImGui::SliderFloat("Font Size", &fontSize, 10.0f, 30.0f))
+		Settings.SetFontSize(fontSize);
+
+	float iconSize = Settings.GetIconSize();
+	if (ImGui::SliderFloat("Icon Size", &iconSize, 10.0f, 100.0f))
+		Settings.SetIconSize(iconSize);
+
+	float barRounding = Settings.GetBarRounding();
+	if (ImGui::SliderFloat("Bar Rounding", &barRounding, 0.0f, 20.0f))
+		Settings.SetBarRounding(barRounding);
+
+	float barBorderThickness = Settings.GetBarBorderThickness();
+	if (ImGui::SliderFloat("Bar Border Thickness", &barBorderThickness, 0.0f, 10.0f))
+		Settings.SetBarBorderThickness(barBorderThickness);
+}
+
+void Ui::AnimatedNameplatesSettings::LoadSettings()
+{
+	m_configFile = (std::filesystem::path(gPathConfig) / "MQAnimatedNameplates.yaml").string();
+
+	try
+	{
+		m_configNode = YAML::LoadFile(m_configFile);
+
+		ShowBuffIcons = m_configNode["ShowBuffIcons"].as<bool>(ShowBuffIcons);
+		ShowDebugPlanel = m_configNode["ShowDebugPanel"].as<bool>(ShowDebugPlanel);
+		FontSize = m_configNode["FontSize"].as<float>(FontSize);
+		IconSize = m_configNode["IconSize"].as<float>(IconSize);
+		BarRounding = m_configNode["BarRounding"].as<float>(BarRounding);
+		BarBorderThickness = m_configNode["BarBorderThickness"].as<float>(BarBorderThickness);
+		Padding = ImVec2(
+			m_configNode["PaddingX"].as<float>(Padding.x),
+			m_configNode["PaddingY"].as<float>(Padding.y)
+		);
+	}
+	catch (const YAML::ParserException& ex)
+	{
+		// failed to parse, notify and return
+		SPDLOG_ERROR("Failed to parse YAML in {}: {}", m_configFile, ex.what());
+		return;
+	}
+	catch (const YAML::BadFile&)
+	{
+		// if we can't read the file, then try to write it with an empty config
+		SaveSettings();
+		return;
+	}
+}
+
+void Ui::AnimatedNameplatesSettings::SaveSettings()
+{
+	try
+	{
+		std::fstream file(m_configFile, std::ios::out);
+
+		if (!m_configNode.IsNull())
+		{
+			YAML::Emitter y_out;
+			y_out.SetIndent(4);
+			y_out.SetFloatPrecision(2);
+			y_out.SetDoublePrecision(2);
+			y_out << m_configNode;
+
+			file << y_out.c_str();
+		}
+
+	}
+	catch (const std::exception&)
+	{
+		SPDLOG_ERROR("Failed to write settings file: {}", m_configFile);
+	}
 }

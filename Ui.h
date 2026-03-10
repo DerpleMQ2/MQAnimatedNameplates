@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 
+#include <yaml-cpp/yaml.h>
 #include <unordered_map>
 #include <string>
 
@@ -33,15 +34,46 @@ public:
 		float lastTarget;
 	};
 
-	struct SettingsStruct
+	class AnimatedNameplatesSettings
 	{
+	public:
+		AnimatedNameplatesSettings() { LoadSettings(); }
+
+		void SaveSettings();
+		void LoadSettings();
+
+		void SetShowBuffIcons(bool show) { ShowBuffIcons = show; m_configNode["ShowBuffIcons"] = show; SaveSettings(); }
+		void SetPadding(const ImVec2& padding) { Padding = padding; m_configNode["PaddingX"] = padding.x; m_configNode["PaddingY"] = padding.y; SaveSettings(); }
+		void SetFontSize(float size) { FontSize = size; m_configNode["FontSize"] = size; SaveSettings(); }
+		void SetIconSize(float size) { IconSize = size; m_configNode["IconSize"] = size; SaveSettings(); }
+		void SetBarRounding(float rounding) { BarRounding = rounding; m_configNode["BarRounding"] = rounding; SaveSettings(); }
+		void SetBarBorderThickness(float thickness) { BarBorderThickness = thickness; m_configNode["BarBorderThickness"] = thickness; SaveSettings(); }
+		void SetShowDebugPanel(bool show) { ShowDebugPlanel = show; m_configNode["ShowDebugPanel"] = show; SaveSettings(); }
+
+		bool GetShowBuffIcons() const { return ShowBuffIcons; }
+		const ImVec2& GetPadding() const { return Padding; }
+		float GetFontSize() const { return FontSize; }
+		float GetIconSize() const { return IconSize; }
+		float GetBarRounding() const { return BarRounding; }
+		float GetBarBorderThickness() const { return BarBorderThickness; }
+		bool GetShowDebugPanel() const { return ShowDebugPlanel; }
+
+	private:
+		bool ShowBuffIcons = true;
+		bool ShowDebugPlanel = false;
 		ImVec2 Padding = ImVec2(8, 4);
-		int FontSize = 20;
+		float FontSize = 20.0f;
 		float IconSize = 20.0f;
 
 		float BarRounding = 6.0f;
 		float BarBorderThickness = 2.5f;
 
+		std::string m_configFile = "MQAnimatedNameplates.yaml";
+		YAML::Node m_configNode =YAML::Node();
+	};
+
+	struct StateStruct
+	{ 
 		std::unordered_map<std::string, TrendState> ProgBarTrendState;
 		std::unordered_map<std::string, AnimState> ProgBarAnimState;
 
@@ -87,7 +119,10 @@ public:
 		const std::string& label = ""
 	);
 
-	static SettingsStruct Settings;
+	static void RenderSettingsPanel();
+
+	static AnimatedNameplatesSettings Settings;
+	static StateStruct State;
 };
 
 struct CursorState
@@ -98,7 +133,7 @@ struct CursorState
 
 	explicit CursorState(const ImVec2& startingPos)
 	{
-		SetPos(startingPos + Ui::Settings.Padding);
+		SetPos(startingPos + Ui::Settings.GetPadding());
 	}
 
 	void SetPos(const ImVec2& pos)
@@ -115,7 +150,7 @@ struct CursorState
 
 	void Move(const ImVec2& pos)
 	{
-		ImVec2 p = Ui::Settings.Padding + pos;
+		ImVec2 p = Ui::Settings.GetPadding() + pos;
 
 		LastCursorLinePos.x = CursorPos.x + p.x;
 		LastCursorLinePos.y = CursorPos.y;
