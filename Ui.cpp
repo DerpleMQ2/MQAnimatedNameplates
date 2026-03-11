@@ -305,7 +305,7 @@ void Ui::AnimatedCheckmark::Reset(bool newVal)
         // already in the correct state, so just mark the paths as complete
         m_pathInitialized = true;
         m_path1Complete   = true;
-        m_path1Complete   = true;
+        m_path2Complete   = true;
     }
 }
 
