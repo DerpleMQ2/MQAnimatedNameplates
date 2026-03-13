@@ -247,15 +247,24 @@ void Ui::RenderAnimatedPercentage(CursorState& cursor, const std::string& id, co
     }
 
     // draw some wings or something if this is our target.
-    if (currentTarget)
+    if (currentTarget && Config::Get().ShowTargetIndicatorWings)
     {
         int lines = static_cast<int>(floor(barH / 4) + 1);
 
         for (int i = 0; i < lines; i++)
         {
             float y = minY + 1 + i * 4;
-            drawList->AddLine(ImVec2(maxX, y), ImVec2(maxX + 15 * (i + 1), y), colHigh, 1.0f);
-            drawList->AddLine(ImVec2(minX, y), ImVec2(minX - 15 * (i + 1), y), colHigh, 1.0f);
+
+            float t             = (lines > 1) ? (float)i / (lines - 1) : 0.0f; // 0..1
+            float centerFalloff = fabsf(t * 2.0f - 1.0f);                      // 1..0..1
+
+            float inset = Config::Get().BarRounding * centerFalloff;
+
+            drawList->AddLine(ImVec2(maxX - inset, y),
+                              ImVec2(maxX + Config::Get().TargetIndicatorWingLength * (i + 1), y), colHigh, 1.0f);
+
+            drawList->AddLine(ImVec2(minX + inset, y),
+                              ImVec2(minX - Config::Get().TargetIndicatorWingLength * (i + 1), y), colHigh, 1.0f);
         }
     }
 
@@ -787,6 +796,14 @@ void Ui::RenderSettingsPanel()
              bool showBuffIcons = Config::Get().ShowBuffIcons;
              if (Ui::AnimatedCheckbox("Show Buff Icons", &showBuffIcons))
                  Config::Get().ShowBuffIcons = showBuffIcons;
+
+             bool showTargetIndicatorWings = Config::Get().ShowTargetIndicatorWings;
+             if (Ui::AnimatedCheckbox("Show Target Indicator", &showTargetIndicatorWings))
+                 Config::Get().ShowTargetIndicatorWings = showTargetIndicatorWings;
+
+             float targetIndicatorWingLength = Config::Get().TargetIndicatorWingLength;
+             if (Ui::AnimatedSlider("Target Indicator Length", &targetIndicatorWingLength, 5.0f, 75.0f, "%.0f"))
+                 Config::Get().TargetIndicatorWingLength = targetIndicatorWingLength;
          }},
         {2, "Size & Positioning",
          []()

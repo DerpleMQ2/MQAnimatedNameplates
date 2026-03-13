@@ -37,11 +37,13 @@ class Config
     ConfigVariable<bool> RenderForAllHaters;
 
     // Optional display
-    ConfigVariable<bool> ShowGuild;
-    ConfigVariable<bool> ShowPurpose;
-    ConfigVariable<bool> ShowLevel;
-    ConfigVariable<bool> ShowClass;
-    ConfigVariable<bool> ShortClassName;
+    ConfigVariable<bool>  ShowGuild;
+    ConfigVariable<bool>  ShowPurpose;
+    ConfigVariable<bool>  ShowLevel;
+    ConfigVariable<bool>  ShowClass;
+    ConfigVariable<bool>  ShortClassName;
+    ConfigVariable<bool>  ShowTargetIndicatorWings;
+    ConfigVariable<float> TargetIndicatorWingLength;
 
     // Rendering behavior
     ConfigVariable<bool> RenderToForeground;
@@ -106,6 +108,10 @@ class Config
           ShowClass(this, "ShowClass", true),
 
           ShortClassName(this, "ShortClassName", true),
+
+          ShowTargetIndicatorWings(this, "ShowTargetIndicatorWings", true),
+
+          TargetIndicatorWingLength(this, "TargetIndicatorWingLength", 15.0f),
 
           RenderToForeground(this, "RenderToForeground", false),
 
