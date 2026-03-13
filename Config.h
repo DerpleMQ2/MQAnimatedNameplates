@@ -26,6 +26,7 @@ class Config
     void LoadSettings();
 
   private:
+    // must come before the variables so that it's initialized when they register themselves in their constructors
     std::vector<ConfigVariableBase*> m_registry;
 
   public:
