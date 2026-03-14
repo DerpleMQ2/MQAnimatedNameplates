@@ -1,5 +1,7 @@
 ﻿#include "Ui.h"
 #include "Config.h"
+#include "Widgets.h"
+
 #include "IndicatorBar.h"
 #include "eqlib/EQLib.h"
 
@@ -740,88 +742,39 @@ public:
     {
         Ui::Config& config = Ui::Config::Get();
 
-        bool renderForSelf = config.RenderForSelf;
-        if (Ui::AnimatedCheckbox("Render For Self", &renderForSelf))
-        {
-            config.RenderForSelf = renderForSelf;
-        }
-
-        bool renderForGroup = config.RenderForGroup;
-        if (Ui::AnimatedCheckbox("Render For Group", &renderForGroup))
-        {
-            config.RenderForGroup = renderForGroup;
-        }
-
-        bool renderForTarget = config.RenderForTarget;
-        if (Ui::AnimatedCheckbox("Render For Target", &renderForTarget))
-        {
-            config.RenderForTarget = renderForTarget;
-        }
-
-        bool renderForAllHaters = config.RenderForAllHaters;
-        if (Ui::AnimatedCheckbox("Render For All Haters", &renderForAllHaters))
-        {
-            config.RenderForAllHaters = renderForAllHaters;
-        }
+        config.RenderForSelf.RenderOption();
+        config.RenderForGroup.RenderOption();
+        config.RenderForTarget.RenderOption();
+        config.RenderForAllHaters.RenderOption();
     }
 
     void DrawLookAndFeelTab()
     {
         Ui::Config& config = Ui::Config::Get();
 
-        Ui::HPBarStyle hpBarStyle = static_cast<Ui::HPBarStyle>(config.HPBarStyleSelf.get());
-        if (Ui::AnimatedCombo("Self HP Bar Style", reinterpret_cast<int*>(&hpBarStyle),
-            { "Solid Red", "Con Color", "Color Range" }))
-            config.HPBarStyleSelf = hpBarStyle;
-
-        hpBarStyle = static_cast<Ui::HPBarStyle>(config.HPBarStyleGroup.get());
-        if (Ui::AnimatedCombo("Group HP Bar Style", reinterpret_cast<int*>(&hpBarStyle),
-            { "Solid Red", "Con Color", "Color Range" }))
-            config.HPBarStyleGroup = hpBarStyle;
-
-        hpBarStyle = static_cast<Ui::HPBarStyle>(config.HPBarStyleTarget.get());
-        if (Ui::AnimatedCombo("Target HP Bar Style", reinterpret_cast<int*>(&hpBarStyle),
-            { "Solid Red", "Con Color", "Color Range" }))
-            config.HPBarStyleTarget = hpBarStyle;
-
-        hpBarStyle = static_cast<Ui::HPBarStyle>(config.HPBarStyleHaters.get());
-        if (Ui::AnimatedCombo("Auto Haters HP Bar Style", reinterpret_cast<int*>(&hpBarStyle),
-            { "Solid Red", "Con Color", "Color Range" }))
-            config.HPBarStyleHaters = hpBarStyle;
+        
+        config.HPBarStyleSelf.RenderOption();
+        config.HPBarStyleGroup.RenderOption();
+        config.HPBarStyleTarget.RenderOption();
+        config.HPBarStyleHaters.RenderOption();
 
         ImGui::NewLine();
 
-        bool showClass = config.ShowClass;
-        if (Ui::AnimatedCheckbox("Show Class", &showClass))
-            config.ShowClass = showClass;
+        config.ShowClass.RenderOption();
+        config.ShortClassName.RenderOption();
+        config.ShowLevel.RenderOption();
+        config.ShowGuild.RenderOption();
+        config.ShowPurpose.RenderOption();
+        config.ShowBuffIcons.RenderOption();
+        ImGui::NewLine();
+        ImGui::Separator();
+        ImGui::NewLine();
+        config.DrawBarBorders.RenderOption();
+        
+        ImGui::NewLine();
 
-        bool shortClassName = config.ShortClassName;
-        if (Ui::AnimatedCheckbox("Short Class Name", &shortClassName))
-            config.ShortClassName = shortClassName;
-
-        bool showLevel = config.ShowLevel;
-        if (Ui::AnimatedCheckbox("Show Level", &showLevel))
-            config.ShowLevel = showLevel;
-
-        bool showGuild = config.ShowGuild;
-        if (Ui::AnimatedCheckbox("Show Guild", &showGuild))
-            config.ShowGuild = showGuild;
-
-        bool showPurpose = config.ShowPurpose;
-        if (Ui::AnimatedCheckbox("Show Purpose", &showPurpose))
-            config.ShowPurpose = showPurpose;
-
-        bool showBuffIcons = config.ShowBuffIcons;
-        if (Ui::AnimatedCheckbox("Show Buff Icons", &showBuffIcons))
-            config.ShowBuffIcons = showBuffIcons;
-
-        bool showTargetIndicatorWings = config.ShowTargetIndicatorWings;
-        if (Ui::AnimatedCheckbox("Show Target Indicator", &showTargetIndicatorWings))
-            config.ShowTargetIndicatorWings = showTargetIndicatorWings;
-
-        float targetIndicatorWingLength = config.TargetIndicatorWingLength;
-        if (Ui::AnimatedSlider("Target Indicator Length", &targetIndicatorWingLength, 5.0f, 75.0f, "%.0f"))
-            config.TargetIndicatorWingLength = targetIndicatorWingLength;
+        config.ShowTargetIndicatorWings.RenderOption();
+        config.TargetIndicatorWingLength.RenderOption();
     }
 
     void DrawSizeAndPositioningTab()
@@ -829,69 +782,30 @@ public:
         Ui::Config& config = Ui::Config::Get();
 
         float sliderLabelWidth = ImGui::CalcTextSize("Nameplate Height Offset").x;
-        const char* valueFormat = "%.1f";
-        float nameplateHeightOffset = config.NameplateHeightOffset;
-        if (Ui::AnimatedSlider("Nameplate Height Offset", &nameplateHeightOffset, 0.0f, 300.0f, valueFormat,
-            sliderLabelWidth))
-            config.NameplateHeightOffset = nameplateHeightOffset;
-
-        float nameplateWidth = config.NameplateWidth;
-        if (Ui::AnimatedSlider("Nameplate Width", &nameplateWidth, 25.0f, 800.0f, valueFormat, sliderLabelWidth))
-            config.NameplateWidth = nameplateWidth;
-
-        float hpTicks = static_cast<float>(config.HPTicks);
-        if (Ui::AnimatedSlider("HP Ticks Every [x] %", &hpTicks, 1, 25, "%.0f", sliderLabelWidth))
-            config.HPTicks = static_cast<int>(hpTicks);
-
-        float fontSize = config.FontSize;
-        if (Ui::AnimatedSlider("Font Size", &fontSize, 1.0f, 40.0f, valueFormat, sliderLabelWidth))
-            config.FontSize = fontSize;
-
-        float iconSize = config.IconSize;
-        if (Ui::AnimatedSlider("Icon Size", &iconSize, 10.0f, 40.0f, valueFormat, sliderLabelWidth))
-            config.IconSize = iconSize;
-
-        float barRounding = config.BarRounding;
-        if (Ui::AnimatedSlider("Bar Rounding", &barRounding, 0.0f, 10.0f, valueFormat, sliderLabelWidth))
-            config.BarRounding = barRounding;
-
-        float barBorderThickness = config.BarBorderThickness;
-        if (Ui::AnimatedSlider("Bar Border Thickness", &barBorderThickness, 0.0f, 5.0f, valueFormat,
-            sliderLabelWidth))
-            config.BarBorderThickness = barBorderThickness;
+        config.NameplateHeightOffset.RenderOption(sliderLabelWidth);
+        config.NameplateWidth.RenderOption(sliderLabelWidth);
+        config.HPTicks.RenderOption(sliderLabelWidth);
+        config.FontSize.RenderOption(sliderLabelWidth);
+        config.IconSize.RenderOption(sliderLabelWidth);
+        config.BarRounding.RenderOption(sliderLabelWidth);
+        config.BarBorderThickness.RenderOption(sliderLabelWidth);
 
         ImGui::NewLine();
 
-        bool drawBarBorders = config.DrawBarBorders;
-        if (Ui::AnimatedCheckbox("Draw Bar Borders", &drawBarBorders))
-            config.DrawBarBorders = drawBarBorders;
-
-        bool renderToForeground = config.RenderToForeground;
-        if (Ui::AnimatedCheckbox("Always on Top", &renderToForeground))
-            config.RenderToForeground = renderToForeground;
-
-        bool renderNoLOS = config.RenderNoLOS;
-        if (Ui::AnimatedCheckbox("Render Even When Occluded", &renderNoLOS))
-            config.RenderNoLOS = renderNoLOS;
+        config.RenderToForeground.RenderOption();
+        config.RenderNoLOS.RenderOption();
     }
 
     void DrawDevAndDebugTab()
     {
         Ui::Config& config = Ui::Config::Get();
 
-        bool showDebugPanel = config.ShowDebugPanel;
-        if (Ui::AnimatedCheckbox("Show Debug Panel", &showDebugPanel))
-            config.ShowDebugPanel = showDebugPanel;
+        config.ShowDebugPanel.RenderOption();
 
         ImGui::NewLine();
 
-        bool drawTestBar = config.DrawTestBar;
-        if (Ui::AnimatedCheckbox("Draw Test Bar", &drawTestBar))
-            config.DrawTestBar = drawTestBar;
-
-        float barPercent = config.BarPercent;
-        if (Ui::AnimatedSlider("Bar %", &barPercent, 0.0f, 100.0f, "%.0f", 200))
-            config.BarPercent = barPercent;
+        config.DrawTestBar.RenderOption();
+        config.BarPercent.RenderOption();
     }
 
     std::vector<Ui::AnimatedTabState> tabs;
@@ -974,8 +888,10 @@ void Ui::RenderSettingsPanel()
                       ImGui::GetColorU32(ImGuiCol_TabSelected), // IM_COL32(91, 194, 231, 255),
                       4.0f);
 
+    ImVec2 padding = ImGui::GetStyle().FramePadding;
+
     // Content area with fade
-    ImVec2 content_pos(tabs_pos.x, tabs_pos.y + tab_height + Ui::Config::Get().PaddingY);
+    ImVec2 content_pos(tabs_pos.x, tabs_pos.y + tab_height + padding.y);
     ImVec2 content_size(total_width, ImGui::GetContentRegionAvail().y);
 
     dl->AddRectFilled(content_pos, ImVec2(content_pos.x + content_size.x, content_pos.y + content_size.y),
@@ -985,12 +901,12 @@ void Ui::RenderSettingsPanel()
     float content_alpha = iam_tween_float(id, ImHashStr("animmp_content"), 1.0f, 0.2f,
                                           iam_ease_preset(iam_ease_out_cubic), iam_policy_crossfade, dt);
 
-    ImGui::SetCursorScreenPos(ImVec2(tabs_pos.x, content_pos.y + Ui::Config::Get().PaddingY * 2.0f));
-    ImGui::Indent(Ui::Config::Get().PaddingX);
+    ImGui::SetCursorScreenPos(ImVec2(tabs_pos.x, content_pos.y + padding.y * 2.0f));
+    ImGui::Indent(padding.x);
     panel.tabs[active_tab].content();
-    ImGui::Unindent(Ui::Config::Get().PaddingX);
+    ImGui::Unindent(padding.x);
 
-    ImGui::SetCursorScreenPos(ImVec2(tabs_pos.x, content_pos.y + content_size.y + Config::Get().PaddingY));
+    ImGui::SetCursorScreenPos(ImVec2(tabs_pos.x, content_pos.y + content_size.y + padding.y));
     ImGui::Dummy(ImVec2(0.0f, 0.0f));
     ImGui::EndChild();
 }

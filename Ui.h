@@ -39,10 +39,6 @@ void RenderFancyHPBar(CursorState& cursor, const std::string& id, float hpPct, c
                       HPBarStyle style = HPBarStyle::HPBarStyle_ColorRange);
 
 void RenderSettingsPanel();
-bool AnimatedCheckbox(const std::string& label, bool* value);
-bool AnimatedSlider(const std::string& label, float* slider_value, float slider_min, float slider_max,
-                    const char* format = "%.2f", float labelWidthOverride = 0.0f);
-bool AnimatedCombo(const std::string& label, int* value, const std::vector<std::string>& items);
 
 ImDrawList* GetDrawList();
 
@@ -120,7 +116,8 @@ struct CursorState
 
     explicit CursorState(const ImVec2& startingPos)
     {
-        SetPos(startingPos + ImVec2(Ui::Config::Get().PaddingX, Ui::Config::Get().PaddingY));
+        ImVec2 padding = ImGui::GetStyle().FramePadding;
+        SetPos(startingPos + padding);
     }
 
     void SetPos(const ImVec2& pos)
@@ -134,7 +131,8 @@ struct CursorState
 
     void Move(const ImVec2& pos)
     {
-        ImVec2 p = ImVec2(Ui::Config::Get().PaddingX, Ui::Config::Get().PaddingY) + pos;
+        ImVec2 padding = ImGui::GetStyle().FramePadding;
+        ImVec2 p = padding + pos;
 
         LastCursorLinePos.x = CursorPos.x + p.x;
         LastCursorLinePos.y = CursorPos.y;
@@ -147,7 +145,8 @@ struct CursorState
 
     void NewLine()
     {
-        CursorPos.y += ImGui::GetTextLineHeight() + Ui::Config::Get().PaddingY;
+        ImVec2 padding = ImGui::GetStyle().FramePadding;
+        CursorPos.y += ImGui::GetTextLineHeight() + padding.y;
         CursorPos.x = LineStartXPos;
     }
 };

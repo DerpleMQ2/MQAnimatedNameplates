@@ -4,6 +4,7 @@
 #include "yaml-cpp/yaml.h"
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace Ui {
 
@@ -70,6 +71,7 @@ public:
 
     virtual void Load(const YAML::Node& source) = 0;
     virtual void Store(YAML::Node& target) const = 0;
+    virtual void RenderOption(float widthOverride) = 0;
 
 protected:
     ConfigContainer& m_container;
@@ -79,10 +81,37 @@ template <typename T>
 class ConfigVariable : public ConfigVariableBase
 {
 public:
-    ConfigVariable(ConfigContainer& container, const char* key, const T& v)
+    ConfigVariable(ConfigContainer& container, const char* key, const char* display, const T& v)
         : ConfigVariableBase(container)
         , m_key(key)
+        , m_displayName(display)
         , m_value(v)
+        , m_min(T{})
+        , m_max(T{})
+        , m_format("%.2f")
+    {
+    }
+
+    ConfigVariable(ConfigContainer& container, const char* key, const char* display, const T& v, const std::function<void(ConfigVariable<T>&, float)>& customRenderFn)
+        : ConfigVariableBase(container)
+        , m_key(key)
+        , m_displayName(display)
+        , m_value(v)
+        , m_min(T{})
+        , m_max(T{})
+        , m_customRenderFunc(customRenderFn)
+        , m_format("%.2f")
+    {
+    }
+
+    ConfigVariable(ConfigContainer& container, const char* key, const char* display, const T& v, const T& min, const T& max, const char* format)
+        : ConfigVariableBase(container)
+        , m_key(key)
+        , m_displayName(display)
+        , m_value(v)
+        , m_min(min)
+        , m_max(max)
+        , m_format(format) 
     {
     }
 
@@ -99,6 +128,7 @@ public:
 
     const T& get() const noexcept { return m_value; }
     const std::string& getKey() const noexcept { return m_key; }
+    const std::string& getDisplayName() const noexcept { return m_displayName; }
 
     void set(const T& v)
     {
@@ -124,9 +154,16 @@ public:
             }
         }
     }
+    
+    virtual void RenderOption(float widthOverride = 0.0f) override;
 
 private:
     std::string m_key;
+    std::string m_displayName;
+    std::string m_format;
+    std::function<void(ConfigVariable<T>&, float)> m_customRenderFunc;
+    T m_min;
+    T m_max;
     T m_value;
 };
 

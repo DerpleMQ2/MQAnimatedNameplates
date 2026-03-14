@@ -1,9 +1,10 @@
 #pragma once
 
+// must come before Textures.h because Textures.h doesnt include memory even though it uses it. FOR SHAME.
+#include <memory>
+
 #include "mq/api/Textures.h"
 #include "imgui/imgui.h"
-
-#include <memory>
 
 namespace Ui {
 

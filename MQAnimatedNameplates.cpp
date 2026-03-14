@@ -48,17 +48,18 @@ void DrawNameplates(PlayerClient* pSpawn, Ui::HPBarStyle style)
     ImVec2 canvasSize(Ui::Config::Get().NameplateWidth, 50);
     ImVec2 baseHeadOffset{0, Ui::Config::Get().NameplateHeightOffset};
 
+    ImVec2 padding = ImGui::GetStyle().FramePadding;
+
     // only render for target.
     if (Ui::Config::Get().ShowBuffIcons && pTarget == pSpawn)
     {
-        int buffsPerRow =
-            static_cast<int>(floorf(canvasSize.x / (Ui::Config::Get().IconSize + Ui::Config::Get().PaddingX)));
+        int buffsPerRow = std::max(1, static_cast<int>(floorf(canvasSize.x / (Ui::Config::Get().IconSize + padding.x))));
 
         int buffCount = Ui::Config::Get().ShowBuffIcons ? GetCachedBuffCount(pSpawn) : 0;
 
         float numBuffRows = ceilf(buffCount / static_cast<float>(buffsPerRow));
 
-        float verticalOffset = numBuffRows * (Ui::Config::Get().IconSize + Ui::Config::Get().PaddingY);
+        float verticalOffset = numBuffRows * (Ui::Config::Get().IconSize + padding.y);
 
         ImVec2 assumedHeadOffset(0, baseHeadOffset.y + verticalOffset);
         ImVec2 curPos = targetNameplatePos - canvasSize * 0.5f - assumedHeadOffset;
@@ -97,7 +98,7 @@ void DrawNameplates(PlayerClient* pSpawn, Ui::HPBarStyle style)
 
     ImVec2 panelPos = cursor.GetPos();
 
-    panelPos.x += Ui::Config::Get().PaddingX;
+    panelPos.x += padding.x;
 
     cursor.SetPos(panelPos);
 
@@ -126,7 +127,7 @@ void DrawNameplates(PlayerClient* pSpawn, Ui::HPBarStyle style)
 
     // right justify this text
     float levelWidth = ImGui::CalcTextSize(targetLevel.c_str()).x;
-    curPos.x         = (startXPos + canvasSize.x) - (levelWidth + Ui::Config::Get().PaddingX * 2);
+    curPos.x = (startXPos + canvasSize.x) - (levelWidth + padding.x * 2);
 
     if (Ui::Config::Get().ShowLevel)
     {
@@ -152,10 +153,10 @@ void DrawNameplates(PlayerClient* pSpawn, Ui::HPBarStyle style)
 
     // center this text
     float classWidth = ImGui::CalcTextSize(classInfo.c_str()).x;
-    curPos.x         = (startXPos + canvasSize.x / 2) - (classWidth / 2 + Ui::Config::Get().PaddingX * 2);
+    curPos.x = (startXPos + canvasSize.x / 2) - (classWidth / 2 + padding.x * 2);
     cursor.SetPos(curPos);
 
-    if (curPos.x <= startXPos + displayNameWidth + Ui::Config::Get().PaddingX * 2)
+    if (curPos.x <= startXPos + displayNameWidth + padding.x * 2)
         cursor.NewLine();
 
     Ui::RenderNamePlateText(cursor, textColor, classInfo.c_str());
@@ -179,7 +180,7 @@ void DrawNameplates(PlayerClient* pSpawn, Ui::HPBarStyle style)
         // center this text
         curPos           = cursor.GetPos();
         float guildWidth = ImGui::CalcTextSize(targetDetail.c_str()).x;
-        curPos.x         = (startXPos + canvasSize.x / 2) - (guildWidth / 2 + Ui::Config::Get().PaddingX * 2);
+        curPos.x = (startXPos + canvasSize.x / 2) - (guildWidth / 2 + padding.x * 2);
 
         cursor.SetPos(curPos);
 
@@ -198,12 +199,12 @@ void DrawNameplates(PlayerClient* pSpawn, Ui::HPBarStyle style)
     cursor.SetPos(ImVec2(startXPos, cursor.GetPos().y));
 
     std::string hpBarID = fmt::format("TargetHPBar_{}", pSpawn->SpawnID);
-    ImVec2      barSize{canvasSize.x - Ui::Config::Get().PaddingX * 2, ImGui::GetTextLineHeight() * 0.75f};
+    ImVec2      barSize{canvasSize.x - padding.x * 2, ImGui::GetTextLineHeight() * 0.75f};
     Ui::RenderFancyHPBar(cursor, hpBarID, pctHP, barSize, conColor, pTarget == pSpawn, "", style);
     ImGui::PopFont();
 
     targetNameplateBottomRight.x =
-        std::max(targetNameplateBottomRight.x, cursor.GetPos().x + canvasSize.x - Ui::Config::Get().PaddingX * 2);
+        std::max(targetNameplateBottomRight.x, cursor.GetPos().x + canvasSize.x - padding.x * 2);
     targetNameplateBottomRight.y =
         std::max(targetNameplateBottomRight.y, cursor.GetPos().y + ImGui::GetTextLineHeight());
 

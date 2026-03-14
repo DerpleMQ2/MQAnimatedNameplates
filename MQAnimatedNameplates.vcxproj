@@ -106,6 +106,7 @@
     <ClInclude Include="IndicatorBar.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Ui.h" />
+    <ClInclude Include="Widgets.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MQAnimatedNameplates.rc" />
