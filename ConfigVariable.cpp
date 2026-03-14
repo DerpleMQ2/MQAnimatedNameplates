@@ -73,45 +73,6 @@ void ConfigContainer::LoadConfig(const std::string& fileName)
     }
 }
 
-template <typename T>
-void ConfigVariable<T>::RenderOption(float widthOverride /* = 0.0f */)
-{
-    if (m_customRenderFunc)
-    {
-        m_customRenderFunc(*this, widthOverride);
-        return;
-    }
-
-    if constexpr (std::is_same_v<T, float>)
-    {
-        float value = m_value;
-        if (Ui::AnimatedSlider(m_displayName.c_str(), &value, m_min, m_max, m_format.c_str(), widthOverride)) 
-        {
-            set(value);
-            Config::Get().SaveSettings();
-        }
-    } else if constexpr (std::is_same_v<T, int>) {
-        float value = static_cast<float>(m_value);
-        if (Ui::AnimatedSlider(m_displayName.c_str(), &value, static_cast<float>(m_min), static_cast<float>(m_max), m_format.c_str(), widthOverride)) 
-        {
-            set(static_cast<int>(value));
-            Config::Get().SaveSettings();
-        }
-    } else if constexpr (std::is_same_v<T, bool>) {
-        bool value = m_value;
-        if (Ui::AnimatedCheckbox(m_displayName.c_str(), &value)) 
-        {
-            set(value);
-            Config::Get().SaveSettings();
-        }
-    }
-}
-
-// Explicit instantiations
-template class ConfigVariable<int>;
-template class ConfigVariable<float>;
-template class ConfigVariable<bool>;
-
 //=============================================================================
 
 ConfigVariableBase::ConfigVariableBase(ConfigContainer& container)
