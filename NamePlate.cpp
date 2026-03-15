@@ -43,7 +43,7 @@ void Nameplate::Render(const ImVec2& center_pos, const ImVec2& frameSize, float 
     ImVec2 topLeft  = framePos;
     ImVec2 botRight = center_pos + (barSize / 2.0f);
 
-    m_targetPercent = std::clamp(percent, 0.0f, 100.0f);
+    m_targetPercent = std::clamp(percent, 0.0f, 100.0f) / 100.f;
 
     if (m_trendDirection == 0)
     {
@@ -52,9 +52,9 @@ void Nameplate::Render(const ImVec2& center_pos, const ImVec2& frameSize, float 
     else
     {
         // calculate which way hps are going from the last time we rendered.
-        if (m_targetPercent < (m_smoothPercent - 0.05f))
+        if (m_targetPercent < (m_smoothPercent))
             m_trendDirection = -1;
-        else if (m_targetPercent > (m_smoothPercent + 0.05f))
+        else if (m_targetPercent >= (m_smoothPercent))
             m_trendDirection = 1;
     }
 
@@ -368,7 +368,7 @@ void Nameplate::RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVe
 
     drawList->AddRect(min, max, colHighlight, Config::Get().BarRounding, 0, Config::Get().BarBorderThickness);
 
-    std::string text = std::to_string(static_cast<int>(std::floor(m_targetPercent + 0.5f))) + "%";
+    std::string text = std::to_string(static_cast<int>(std::floor((m_targetPercent*100.f) + 0.5f))) + "%";
 
     ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
 
