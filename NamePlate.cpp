@@ -33,7 +33,7 @@ ImDrawList* Nameplate::GetDrawList()
     return Ui::Config::Get().RenderToForeground ? ImGui::GetForegroundDrawList() : ImGui::GetBackgroundDrawList();
 }
 
-void Nameplate::Render(const ImVec2& center_pos, const ImVec2& frameSize, float percent,
+void Nameplate::Render(ImVec2& center_pos, const ImVec2& frameSize, float percent,
     Ui::HPBarStyle style, bool currentTarget)
 {
     // track the last render and clean up after 30s of non-usage.
@@ -52,6 +52,15 @@ void Nameplate::Render(const ImVec2& center_pos, const ImVec2& frameSize, float 
         frameSize.x - padding.x * 2,
         ImGui::GetTextLineHeight() // Should this acutally be frameSize.y?
     };
+
+    if (m_renderCount++ % 2 == 0)
+    {
+        m_lastPosition = center_pos;
+    }
+    else
+    {
+        center_pos = m_lastPosition;
+    }
 
     ImVec2 framePos = center_pos - (frameSize / 2.0f);
     ImVec2 barPos   = center_pos - (barSize / 2.0f);

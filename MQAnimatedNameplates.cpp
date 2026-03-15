@@ -1,4 +1,4 @@
-﻿// MQAnimatedNameplates.cpp : Defines the entry point for the DLL application.
+// MQAnimatedNameplates.cpp : Defines the entry point for the DLL application.
 //
 
 // PLUGIN_API is only to be used for callbacks.  All existing callbacks at this time

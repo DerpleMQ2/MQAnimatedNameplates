@@ -237,7 +237,8 @@ bool AnimatedSliderImpl(const char* label, T * slider_value, T slider_min, T sli
 
     bool hovered = ImGui::IsItemHovered() || ImGui::IsItemActive();
 
-    float relativeValue = static_cast<float>(*slider_value) / static_cast<float>(slider_max);
+    float range = static_cast<float>(slider_max) - static_cast<float>(slider_min);
+    float relativeValue = (static_cast<float>(*slider_value) - static_cast<float>(slider_min)) / range;
 
     // Filled portion with glow
     float       fill_width = relativeValue * slider_width;

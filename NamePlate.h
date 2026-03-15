@@ -32,7 +32,7 @@ public:
 
     ImDrawList* GetDrawList();
 
-    void Render(const ImVec2& center_pos, const ImVec2& frameSize, float percent, Ui::HPBarStyle style,
+    void Render(ImVec2& center_pos, const ImVec2& frameSize, float percent, Ui::HPBarStyle style,
         bool currentTarget);
 
     void RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVec2& barSize, ImU32 colLow,
@@ -62,6 +62,8 @@ public:
     mq::MQColor m_conColor;
     std::chrono::steady_clock::time_point m_lastRenderTime{};
     eqlib::PlayerClient* m_pSpawn;
+    ImVec2 m_lastPosition{ 0.0f, 0.0f };
+    int m_renderCount{ 0 };
 };
 
 } // namespace Ui
