@@ -48,7 +48,8 @@ void Nameplate::Render(ImVec2& center_pos, const ImVec2& frameSize, float scale,
     m_lastRenderTime = std::chrono::steady_clock::now();
 
     Ui::Config& config = Ui::Config::Get();
-    float finalScale = (1.0f/scale) * config.ScaleFactor;
+
+    float finalScale = config.ScaleWithDistance ? (1.0f/scale) : 1.0f * config.ScaleFactor;
 
     float dt = ImGui::GetIO().DeltaTime;
 
@@ -115,7 +116,7 @@ void Nameplate::Render(ImVec2& center_pos, const ImVec2& frameSize, float scale,
             highlightColor = currentTarget ? IM_COL32(255, 128, 0, 255) : IM_COL32(240, 80, 240, 255);
             break;
         case HPBarStyle_ConColor:
-            hpLow = hpMid = hpHigh = m_conColor.ToImU32();
+            hpLow = hpMid = hpHigh = ReduceAlpha(m_conColor.ToImU32(), config.ConColorAlphaModifier);
             highlightColor = currentTarget ? IM_COL32(255, 128, 0, 255) : IM_COL32(240, 80, 240, 255);
             break;
         case HPBarStyle_ColorRange:

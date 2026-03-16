@@ -116,13 +116,15 @@ public:
         ImGui::NewLine();
         ImGui::Separator();
         ImGui::NewLine();
-
+        
+        RenderOption(config.ConColorAlphaModifier, "Con Color Alpha Modifier", 150, "%.2f");
+        RenderOption(config.ScaleWithDistance, "Scale With Distance");
         RenderOption(config.DrawBarBorders, "Draw Bar Borders");
-
+        
         ImGui::NewLine();
 
         RenderOption(config.ShowTargetIndicatorWings, "Show Target Indicator");
-        RenderOption(config.TargetIndicatorWingLength, "Target Indicator Length", 0, "%.0f");
+        RenderOption(config.TargetIndicatorWingLength, "Target Indicator Length", 150, "%.0f");
     }
 
     void DrawSizeAndPositioningTab()
@@ -175,7 +177,7 @@ void Ui::RenderSettingsPanel()
     ImGui::BeginChild(
         "##AnimatedNameplatesSettings",
         ImVec2(std::max(ImGui::GetContentRegionAvail().x, 400.0f), std::max(ImGui::GetContentRegionAvail().y, 250.0f)),
-        ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar);
+        ImGuiChildFlags_None, ImGuiWindowFlags_None);
 
     ImGui::PushFont(mq::imgui::LargeTextFont);
     ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.2f, 1.0f), "Nameplate Settings");
@@ -250,19 +252,15 @@ void Ui::RenderSettingsPanel()
 
     ImVec2 padding = ImGui::GetStyle().FramePadding;
 
-    // Content area with fade
     ImVec2 content_pos(tabs_pos.x, tabs_pos.y + tab_height + padding.y);
     ImVec2 content_size(total_width, ImGui::GetContentRegionAvail().y);
-
-    dl->AddRectFilled(content_pos, ImVec2(content_pos.x + content_size.x, content_pos.y + content_size.y),
-        ImGui::GetColorU32(ImGuiCol_TableRowBgAlt), 4.0f);
 
     ImGui::SetCursorScreenPos(ImVec2(tabs_pos.x, content_pos.y + padding.y * 2.0f));
     ImGui::Indent(padding.x);
     panel.tabs[active_tab].content();
     ImGui::Unindent(padding.x);
 
-    ImGui::SetCursorScreenPos(ImVec2(tabs_pos.x, content_pos.y + content_size.y + padding.y));
+    ImGui::SetCursorScreenPos(ImVec2(tabs_pos.x, content_pos.y + content_size.y));
     ImGui::Dummy(ImVec2(0.0f, 0.0f));
     ImGui::EndChild();
 }
