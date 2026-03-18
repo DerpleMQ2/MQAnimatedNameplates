@@ -90,7 +90,7 @@ void Nameplate::Render(ImVec2& center_pos, const ImVec2& frameSize, float scale)
         g_maskedImage3.RenderNineSlice(drawList, testBarPos, testBarPos + ImVec2{ 512, 64 }, ImVec2{ 42,42 }, margins);
     }
 
-    float finalScale = config.ScaleWithDistance ? (1.0f/scale) : 1.0f * config.ScaleFactor;
+    float finalScale = std::clamp(config.ScaleWithDistance ? (1.0f/scale) : 1.0f * config.ScaleFactor, config.MaxCalculatedScaleFactor.getMinValue(), config.MaxCalculatedScaleFactor.get());
 
     float dt = ImGui::GetIO().DeltaTime;
 
@@ -101,7 +101,7 @@ void Nameplate::Render(ImVec2& center_pos, const ImVec2& frameSize, float scale)
     const ImVec2 padding = ImGui::GetStyle().FramePadding;
     const ImVec2 barSize{
         scaledFameSize.x - padding.x * 2,
-        ImGui::GetTextLineHeight() // Should this acutally be scaledFameSize.y?
+        scaledFameSize.y - padding.y * 2
     };
 
     if (m_renderCount++ % 2 == 0)
@@ -420,20 +420,23 @@ void Nameplate::RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVe
 
 void Nameplate::RenderDebugInfo(const ImVec2& min, const ImVec2& max, ImU32 color, float rounding, float scale, float finalScale)
 {
-    if (!Ui::Config::Get().ShowDebugPanel)
-        return;
-
+    Ui::Config& config = Ui::Config::Get();
     ImDrawList* drawList = Nameplate::GetDrawList();
 
+    if (config.ShowDebugText)
+    {
+        ImU32 pink = IM_COL32(240, 80, 240, 255);
+        char debugText[128];
+        sprintf_s(debugText, "Distance: %.2f\nScale: %.5f FinalScale: %.5f\nTargetPct: %.2f SmoothPct: %.2f", GetDistplaceToPlayer(), 1.0f / scale, finalScale, m_targetPercent, m_smoothPercent);
 
-    ImU32 pink = IM_COL32(240, 80, 240, 255);
-    char debugText[128];
-    sprintf_s(debugText, "Distance: %.2f Scale: %.5f FinalScale: %.5f TargetPct: %.2f SmoothPct: %.2f", GetDistplaceToPlayer(), 1.0f / scale, finalScale, m_targetPercent, m_smoothPercent);
+        ImVec2 textPos{ min.x, max.y + ImGui::GetTextLineHeightWithSpacing() };
+        ImVec2 textSize = ImGui::CalcTextSize(debugText);
+        drawList->AddRectFilled(textPos + ImVec2{ -4,-4 }, textPos + textSize + ImVec2{ 4,4 }, IM_COL32(0, 0, 0, 150));
+        drawList->AddText(textPos, pink, debugText);
+    }
 
-    ImVec2 textPos{ min.x, max.y + ImGui::GetTextLineHeightWithSpacing() };
-    drawList->AddText(textPos, pink, debugText);
-
-    drawList->AddRectFilled(min, max, color, rounding);
+    if (config.ShowDebugBounds)
+        drawList->AddRectFilled(min, max, color, rounding);
 }
 
 void Nameplate::RenderSpellIcon(const ImVec2& pos, eqlib::EQ_Spell* pSpell)

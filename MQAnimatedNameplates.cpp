@@ -232,7 +232,7 @@ static void DrawNameplates(Ui::Nameplate* pNameplate, bool alwaysVisible = false
         return;
 
     Ui::Config& config = Ui::Config::Get();
-    const ImVec2 canvasSize(config.NameplateWidth, 50);
+    const ImVec2 canvasSize(config.NameplateWidth, config.NameplateHeight);
 
     float nameplateScale = 1.0f;
     ImVec2 targetNameplatePos;

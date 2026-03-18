@@ -133,8 +133,10 @@ public:
 
         float sliderLabelWidth = ImGui::CalcTextSize("Nameplate Height Offset").x;
 
-        RenderOption(config.NameplateHeightOffset, "Nameplate Height Offset", sliderLabelWidth, "%.0f");
         RenderOption(config.NameplateWidth, "Nameplate Width", sliderLabelWidth, "%0.f");
+        RenderOption(config.NameplateHeight, "Nameplate Height", sliderLabelWidth, "%0.f");
+
+        RenderOption(config.NameplateHeightOffset, "Nameplate Height Offset", sliderLabelWidth, "%.0f");
         RenderOption(config.HPTicks, "HP Ticks Every [x]%", sliderLabelWidth);
         RenderOption(config.FontSize, "Font Size", sliderLabelWidth, "%.1f");
         RenderOption(config.IconSize, "Icon Size", sliderLabelWidth, "%.1f");
@@ -151,8 +153,10 @@ public:
     void DrawDevAndDebugTab()
     {
         Ui::Config& config = Ui::Config::Get();
+        float sliderLabelWidth = ImGui::CalcTextSize("Nameplate Height Adjustment").x;
 
-        RenderOption(config.ShowDebugPanel, "Show Debug Panel");
+        RenderOption(config.ShowDebugBounds, "Show Debug Bounding Box");
+        RenderOption(config.ShowDebugText, "Show Debug Text");
 
         ImGui::NewLine();
 
@@ -161,12 +165,13 @@ public:
 
         ImGui::NewLine();
 
-        RenderOption(config.ScaleFactorAdjustment, "Scale Factor Adjustment", 0, "%.05f");
-        RenderOption(config.NameplateHeightAdjust, "Nameplate Height Adjustment");
-        RenderOption(config.NameplateHeightScaleCoeff, "Nameplate Scale Coefficient");
+        RenderOption(config.ScaleFactorAdjustment, "Scale Factor Adjustment", sliderLabelWidth, "%.05f");
+        RenderOption(config.NameplateHeightAdjust, "Nameplate Height Adjustment", sliderLabelWidth);
+        RenderOption(config.NameplateHeightScaleCoeff, "Nameplate Scale Coefficient", sliderLabelWidth);
 
         ImGui::NewLine();
-        RenderOption(config.ScaleFactor, "Overall Scale Factor", 0, "%.2f");
+        RenderOption(config.ScaleFactor, "Overall Scale Factor", sliderLabelWidth, "%.2f");
+        RenderOption(config.MaxCalculatedScaleFactor, "Max Scale Factor", sliderLabelWidth, "%.2f");
     }
 
     std::vector<Ui::AnimatedTabState> tabs;

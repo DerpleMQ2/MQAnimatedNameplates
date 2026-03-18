@@ -77,7 +77,8 @@ public:
 
     // Basic flags
     ConfigVariable<bool> ShowBuffIcons{ m_container, "ShowBuffIcons", true };
-    ConfigVariable<bool> ShowDebugPanel{ m_container, "ShowDebugPanel", false };
+    ConfigVariable<bool> ShowDebugBounds{ m_container, "ShowDebugBounds", false };
+    ConfigVariable<bool> ShowDebugText{ m_container, "ShowDebugText", false };
 
     ConfigVariable<bool> DrawTestBar{ m_container, "DrawTestBar", false };
     ConfigVariable<float> BarPercent{ m_container, "BarPercent", 100.0f, 0.0f, 100.0f };
@@ -89,9 +90,11 @@ public:
     ConfigVariable<float> FontSize{ m_container, "FontSize", 20.0f, 1.0f, 40.0f };
     ConfigVariable<float> IconSize{ m_container, "IconSize", 20.0f, 10.0f, 40.0f };
     ConfigVariable<float> NameplateWidth{ m_container, "NameplateWidth", 500.0f, 25.0f, 1500.0f };
+    ConfigVariable<float> NameplateHeight{ m_container, "NameplateHeight", 50.0f, 5.0f, 500.0f };
     ConfigVariable<int> HPTicks{ m_container, "HPTicks", 10, 1, 25 };
     ConfigVariable<float> NameplateHeightOffset{ m_container, "NameplateHeightOffset", 35.0f, -200.0f, 400.0f };
     ConfigVariable<float> ScaleFactor{ m_container, "ScaleFactor", 1.0f, 0.1f, 10.0f };
+    ConfigVariable<float> MaxCalculatedScaleFactor{ m_container, "MaxCalculatedScaleFactor", 1.10f, 0.1f, 10.0f };
 
     // Bar appearance
     ConfigVariable<float> BarRounding{ m_container, "BarRounding", 6.0f, 0.0f, 10.0f };
