@@ -27,7 +27,7 @@ public:
     AnimatedCheckmark(bool value, const char* label)
         : m_newValue(value)
     {
-        char id[32];
+        char id[128];
         sprintf_s(id, "%s_path1", label);
         m_animIdPath1 = ImHashStr(id);
         sprintf_s(id, "%s_path2", label);

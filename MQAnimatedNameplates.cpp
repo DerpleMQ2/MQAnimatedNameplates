@@ -61,6 +61,7 @@ static bool CanSeeNameplate(const CVector3& targetPosition)
     if (config.RenderNoLOS)
         return true;
 
+
     CCamera* camera = static_cast<eqlib::CCamera*>(pDisplay->pCamera);
     if (!camera)
         return false;
@@ -103,6 +104,14 @@ static bool CanSeeNameplate(const CVector3& targetPosition)
 
 static bool CanSeeNameplate(PlayerClient* pSpawn)
 {
+    Ui::Config& config = Ui::Config::Get();
+
+    if (config.RenderNoLOS)
+        return true;
+
+    if (config.RenderTargetNoLOS && pSpawn == pTarget)
+        return true;
+
     const CVector3 targetPos(pSpawn->Y, pSpawn->X, pSpawn->Z + pSpawn->Height);
 
     return CanSeeNameplate(targetPos);
@@ -223,7 +232,7 @@ Ui::HPBarStyle GetCategoryForSpawn(PlayerClient* pSpawn)
     return it->second.GetBarStyle();
 }
 
-static void DrawNameplates(Ui::Nameplate* pNameplate, bool alwaysVisible = false)
+static void DrawNameplate(Ui::Nameplate* pNameplate, bool alwaysVisible = false)
 {
     if (!pDisplay)
         return;
@@ -389,7 +398,7 @@ PLUGIN_API void OnUpdateImGui()
 
         for (auto pNameplate : s_nameplatesToRenderByDistance)
         {
-            DrawNameplates(pNameplate);
+            DrawNameplate(pNameplate);
         }
 
     }

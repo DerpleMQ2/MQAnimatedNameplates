@@ -71,6 +71,7 @@ public:
     // Rendering behavior
     ConfigVariable<bool> RenderToForeground{ m_container, "RenderToForeground", false };
     ConfigVariable<bool> RenderNoLOS{ m_container, "RenderNoLOS", false };
+    ConfigVariable<bool> RenderTargetNoLOS{ m_container, "RenderTargetNoLOS", false };
     ConfigVariable<float> MaxDrawDistance{ m_container, "MaxDrawDistance", 200.0f, 100.0f, 1000.0f };
     ConfigVariable<bool> ScaleWithDistance{ m_container, "ScaleWithDistance", true };
     ConfigVariable<float> ConColorAlphaModifier{ m_container, "ConColorAlphaModifier", 1.0f, 0.1f, 1.0f };

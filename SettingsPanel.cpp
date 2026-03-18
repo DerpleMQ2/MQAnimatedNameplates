@@ -147,6 +147,7 @@ public:
 
         RenderOption(config.RenderToForeground, "Render To Foreground");
         RenderOption(config.RenderNoLOS, "Render Even When Occluded");
+        RenderOption(config.RenderTargetNoLOS, "Render Target Even When Occluded");
         RenderOption(config.MaxDrawDistance, "Maximum Draw Distance");
     }
 
