@@ -596,7 +596,7 @@ float Nameplate::GetSpawnPercentHP() const
 {
     Ui::Config& config = Ui::Config::Get();
 
-    if (config.DrawTestBar)
+    if (config.UseTestPercentages)
         return config.BarPercent;
 
     if (!m_pSpawn)

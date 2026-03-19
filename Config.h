@@ -93,6 +93,7 @@ public:
     ConfigVariable<bool> ShowDebugText{ m_container, "ShowDebugText", false };
 
     ConfigVariable<bool> DrawTestBar{ m_container, "DrawTestBar", false };
+    ConfigVariable<bool> UseTestPercentages{ m_container, "UseTestPercentages", false };
     ConfigVariable<float> BarPercent{ m_container, "BarPercent", 100.0f, 0.0f, 100.0f };
     ConfigVariable<float> ScaleFactorAdjustment{ m_container, "ScaleFactorAdjustment", 1.0f, 0.001f, 10.0f };
     ConfigVariable<float> NameplateHeightAdjust{ m_container, "NameplateHeightAdjust", 5.0f, 0.0f, 25.0f };

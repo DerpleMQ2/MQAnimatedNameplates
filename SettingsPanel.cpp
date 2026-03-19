@@ -193,6 +193,7 @@ public:
         ImGui::NewLine();
 
         RenderOption(config.DrawTestBar, "Draw Test Bar");
+        RenderOption(config.UseTestPercentages, "Use Test Percentages");
         RenderOption(config.BarPercent, "Test Bar Percent", 0, "%0.f");
 
         ImGui::NewLine();
