@@ -40,8 +40,6 @@ public:
     Nameplate(const std::string& id, eqlib::PlayerClient* pSpawn,
         const std::string& textureFrame, const std::string& textureBar);
 
-    void InitIamAnim();
-
     ImDrawList* GetDrawList();
 
     void Render(ImVec2& center_pos, const ImVec2& frameSize, float scale);

@@ -266,10 +266,13 @@ PLUGIN_API void ShutdownPlugin()
 
 PLUGIN_API void OnUpdateImGui()
 {
-    iam_context_set_current(context);
-
     if (GetGameState() == GAMESTATE_INGAME)
     {
+        iam_context_set_current(context);
+
+        bool lazy_init_enabled = iam_is_lazy_init_enabled();
+        iam_set_lazy_init(false);
+
         auto now = std::chrono::steady_clock::now();
         if (now - s_lastExpirationCheck > expiration_check_time)
         {
@@ -391,13 +394,15 @@ PLUGIN_API void OnUpdateImGui()
         if (std::chrono::steady_clock::now() > s_lastRenderTime + SPAWN_SORT_INTERVAL)
         {
             // sort by furthest away
-            std::ranges::sort(s_nameplatesToRenderByDistance.begin(), s_nameplatesToRenderByDistance.end(), [](Ui::Nameplate* a, Ui::Nameplate* b) {
+            std::ranges::sort(s_nameplatesToRenderByDistance.begin(), s_nameplatesToRenderByDistance.end(),
+                [](Ui::Nameplate* a, Ui::Nameplate* b)
+            {
                 if (a->IsCurrentTarget())
                     return false;
                 if (b->IsCurrentTarget())
                     return true;
                 return a->GetDistplaceToPlayer() > b->GetDistplaceToPlayer();
-                });
+            });
         }
 
         for (auto pNameplate : s_nameplatesToRenderByDistance)
@@ -405,6 +410,7 @@ PLUGIN_API void OnUpdateImGui()
             DrawNameplate(pNameplate);
         }
 
+        iam_set_lazy_init(lazy_init_enabled);
     }
     else if (!s_nameplatesBySpawnId.empty())
     {

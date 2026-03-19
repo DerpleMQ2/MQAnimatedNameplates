@@ -32,7 +32,6 @@ Nameplate::Nameplate(const std::string& id, eqlib::PlayerClient* pSpawn)
     , m_conColor(GetColorForChatColor(ConColor(pSpawn)))
     , m_targetPercent(GetSpawnPercentHP() / 100.f)
 {
-    InitIamAnim();
 }
 
 Nameplate::Nameplate(const std::string& id, eqlib::PlayerClient* pSpawn,
@@ -45,21 +44,6 @@ Nameplate::Nameplate(const std::string& id, eqlib::PlayerClient* pSpawn,
 {
     m_pTextureFrame = mq::CreateTexturePtr(textureFrame);
     m_pTextureBar = mq::CreateTexturePtr(textureBar);
-
-    InitIamAnim();
-}
-
-void Nameplate::InitIamAnim()
-{
-    float dt = ImGui::GetIO().DeltaTime;
-
-    bool lazy_init_enabled = iam_is_lazy_init_enabled();
-    iam_set_lazy_init(false);
-
-    m_smoothPercent = iam_tween_float(ImHashStr(m_id.c_str()), pct_id, m_targetPercent * 100.0f, 0.5f,
-        iam_ease_preset(iam_ease_linear), iam_policy_crossfade, dt, m_targetPercent * 100.0f) / 100.0f;
-
-    iam_set_lazy_init(lazy_init_enabled);
 }
 
 ImDrawList* Nameplate::GetDrawList()
