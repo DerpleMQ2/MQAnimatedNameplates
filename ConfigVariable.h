@@ -1,13 +1,14 @@
 
 #pragma once
 
-#include "yaml-cpp/yaml.h"
 #include "mq/base/Color.h"
+
+#include "fmt/format.h"
+#include "yaml-cpp/yaml.h"
 
 #include <concepts>
 #include <string>
 #include <vector>
-#include <fmt/format.h>
 
 namespace Ui {
 
@@ -15,6 +16,12 @@ class ConfigVariableBase;
 
 template <typename T>
 struct config_enum_traits;
+
+namespace detail
+{
+    template <typename T>
+    concept arithmetic = (std::integral<T> || std::floating_point<T>) && !std::is_same_v<T, bool>;
+}
 
 // Requires a specialization of config_enum_traits that returns a value
 // mapping representing association of values and names.
@@ -102,11 +109,121 @@ protected:
     ConfigContainer& m_container;
 };
 
+// Base traits for simple types that can be directly converted to/from YAML.
+template <typename T, typename U = T>
+struct BaseVariableTraits
+{
+    using ValueType = T;
+    using StorageType = U;
+
+    // if you need me, override me for correct behavior
+    static StorageType convert_to_storage(const ValueType& v)
+    {
+        if constexpr (std::is_same_v<ValueType, StorageType>)
+            return v;
+        else if constexpr (std::is_convertible_v<ValueType, StorageType>)
+            return static_cast<StorageType>(v);
+        else
+            return StorageType{};
+    }
+
+    // if you need me, override me for correct behavior
+    static ValueType convert_to_value(const StorageType& s)
+    {
+        if constexpr (std::is_same_v<StorageType, ValueType>)
+            return s;
+        else if (std::is_convertible_v<StorageType, ValueType>)
+            return static_cast<ValueType>(s);
+        else
+            return ValueType{};
+    }
+
+    static ValueType get_default()
+    {
+        return ValueType{};
+    }
+
+    static bool set_value(ValueType& existing_value, const ValueType& new_value)
+    {
+        existing_value = new_value;
+        return true;
+    }
+};
+
+// Traits for enum types that require mapping to/from strings.
+template <EnumTraitsConcept T>
+struct EnumVariableTraits : BaseVariableTraits<T, std::underlying_type_t<T>>
+{
+    using ValueType = T;
+    using StorageType = std::underlying_type_t<T>;
+
+    static StorageType convert_to_storage(const ValueType& v)
+    {
+        return static_cast<std::underlying_type_t<ValueType>>(v);
+    }
+
+    static ValueType convert_to_value(const StorageType& s)
+    {
+        return static_cast<T>(s);
+    }
+
+    static bool set_value(ValueType& existing_value, const ValueType& new_value)
+    {
+        for (const auto& [enumValue, _] : config_enum_traits<ValueType>::values())
+        {
+            if (enumValue == new_value)
+            {
+                existing_value = new_value;
+                return true;
+            }
+        }
+
+        return false;
+    }
+};
+
+// Traits for mq::MQColor that convert to/from hex string representation.
+struct ColorVariableTraits : BaseVariableTraits<mq::MQColor>
+{
+    using ValueType = mq::MQColor;
+    using StorageType = std::string;
+
+    static StorageType convert_to_storage(const ValueType& value)
+    {
+        return fmt::format("#{:06x}", value.ToARGB() & 0x00FFFFFF);
+    }
+
+    static ValueType convert_to_value(const StorageType& s)
+    {
+        try
+        {
+            return mq::MQColor(s.c_str());
+        }
+        catch (mq::detail::InvalidHexChar)
+        {
+            return mq::MQColor(0, 0, 0);
+        }
+    }
+};
+
 template <typename T>
+struct VariableTraits : BaseVariableTraits<T> {};
+
+template <typename T> requires EnumTraitsConcept<T>
+struct VariableTraits<T> : EnumVariableTraits<T> {};
+
+template <typename T> requires std::is_same_v<T, mq::MQColor>
+struct VariableTraits<T> : ColorVariableTraits {};
+
+template <typename T, typename Traits = VariableTraits<T>>
 class BasicConfigVariable : public ConfigVariableBase
 {
 public:
-    BasicConfigVariable(ConfigContainer& container, const char* key, const T& defaultValue)
+    using TraitsType = Traits;
+    using ValueType = TraitsType::ValueType;
+    using StorageType = TraitsType::StorageType;
+
+    BasicConfigVariable(ConfigContainer& container, const char* key, const ValueType& defaultValue)
         : ConfigVariableBase(container)
         , m_key(key)
         , m_value(defaultValue)
@@ -116,18 +233,18 @@ public:
     BasicConfigVariable(const BasicConfigVariable&) = delete;
     BasicConfigVariable& operator=(const BasicConfigVariable&) = delete;
 
-    BasicConfigVariable& operator=(const T& v)
+    BasicConfigVariable& operator=(const ValueType& v)
     {
         set(v);
         return *this;
     }
 
-    operator const T& () const noexcept { return m_value; }
+    operator const ValueType& () const noexcept { return m_value; }
 
-    const T& get() const noexcept { return m_value; }
+    const ValueType& get() const noexcept { return m_value; }
     const std::string& getKey() const noexcept { return m_key; }
 
-    void set(const T& v)
+    void set(const ValueType& v)
     {
         if (set_internal(v))
         {
@@ -135,62 +252,37 @@ public:
         }
     }
 
-    virtual void Store(YAML::Node& yamlNode) const override
+    virtual void Store(YAML::Node& yamlNode) const override final
     {
-        if constexpr (std::is_same_v<T, mq::MQColor>)
-        {
-            yamlNode[m_key] = fmt::format("#{:06x}", m_value.ToARGB() & 0x00FFFFFF);
-        }
-        else if constexpr (!std::is_enum_v<T> && !std::is_same_v<T, mq::MQColor>)
-        {
-            yamlNode[m_key] = m_value;
-        }
-        else
-        {
-            yamlNode[m_key] = static_cast<std::underlying_type_t<T>>(m_value);
-        }
+        yamlNode[m_key] = TraitsType::convert_to_storage(m_value);
     }
 
-    virtual void Load(const YAML::Node& yamlNode) override
+    virtual void Load(const YAML::Node& yamlNode) override final
     {
         if (auto node = yamlNode[m_key])
         {
             try
             {
-                if constexpr (std::is_same_v<T, mq::MQColor>)
-                {
-                    set_internal(mq::MQColor(node.as<std::string>(std::string()).c_str()));
-                }
-                else if constexpr (!std::is_enum_v<T> )
-                {
-                    set_internal(node.as<T>());
-                }
-                else
-                {
-                    set_internal(static_cast<T>(node.as<std::underlying_type_t<T>>()));
-                }
-            }
-            catch (mq::detail::InvalidHexChar)
-            {
+                set_internal(TraitsType::convert_to_value(node.as<StorageType>()));
             }
             catch (const YAML::BadConversion&)
             {
+                set_internal(TraitsType::get_default());
             }
         }
     }
 
 protected:
-    virtual bool set_internal(const T& v)
+    virtual bool set_internal(const ValueType& v)
     {
-        m_value = v;
-        return true;
+        return TraitsType::set_value(m_value, v);
     }
 
     const std::string m_key;
-    T m_value;
+    ValueType m_value;
 };
 
-template <typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
+template <detail::arithmetic T>
 class NumericConfigVariable : public BasicConfigVariable<T>
 {
 public:
@@ -228,65 +320,18 @@ protected:
     T m_maxValue{};
 };
 
-template <typename T> requires EnumTraitsConcept<T>
-class EnumConfigVariable : public BasicConfigVariable<T>
-{
-public:
-    using BasicConfigVariable<T>::BasicConfigVariable;
-
-    const std::vector<std::pair<T, std::string>>& getValueMapping() const
-    {
-        return config_enum_traits<T>::values();
-    }
-
-protected:
-    virtual bool set_internal(const T& value) override
-    {
-        for (const auto& [enumValue, _] : getValueMapping())
-        {
-            if (enumValue == value)
-            {
-                this->m_value = value;
-                return true;
-            }
-        }
-
-        return false;
-    }
-};
-
 template <typename T>
-class ColorConfigVariable : public BasicConfigVariable<T>
+class ConfigVariable : public BasicConfigVariable<T>
 {
-public:
     using BasicConfigVariable<T>::BasicConfigVariable;
 };
 
-template <typename T>
-class ConfigVariable;
-
-template <typename T> requires (std::is_integral_v<T> || std::is_floating_point_v<T>) && (!std::is_same_v<T, bool>)
+template <detail::arithmetic T>
 class ConfigVariable<T> : public NumericConfigVariable<T>
 {
     using NumericConfigVariable<T>::NumericConfigVariable;
 };
 
-template <typename T> requires std::is_same_v<T, bool>
-class ConfigVariable<T> : public BasicConfigVariable<T>
-{
-    using BasicConfigVariable<T>::BasicConfigVariable;
-};
 
-template <typename T> requires std::is_enum_v<T>
-class ConfigVariable<T> : public EnumConfigVariable<T>
-{
-    using EnumConfigVariable<T>::EnumConfigVariable;
-};
-
-template <typename T> requires std::is_same_v<T, mq::MQColor>
-class ConfigVariable<T> : public ColorConfigVariable<T>
-{
-    using ColorConfigVariable<T>::ColorConfigVariable;
-};
 
 } // namespace Ui

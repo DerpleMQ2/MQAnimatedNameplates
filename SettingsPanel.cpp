@@ -56,8 +56,8 @@ bool RenderOption(Ui::BasicConfigVariable<T>& variable, const char* labelText)
     return false;
 }
 
-template <typename T>
-bool RenderOption(Ui::EnumConfigVariable<T>& variable, const char* labelText)
+template <Ui::EnumTraitsConcept T>
+bool RenderOption(Ui::ConfigVariable<T>& variable, const char* labelText)
 {
     T value = variable.get();
     if (Ui::AnimatedEnumCombo(labelText, &value))
@@ -69,19 +69,18 @@ bool RenderOption(Ui::EnumConfigVariable<T>& variable, const char* labelText)
     return false;
 }
 
-template <typename T>
-bool RenderOption(Ui::ColorConfigVariable<T>& variable, const char* labelText)
+template <typename T> requires std::is_same_v<T, mq::MQColor>
+bool RenderOption(Ui::ConfigVariable<T>& variable, const char* labelText)
 {
-    T value = variable.get();
-    ImVec4 color{ value.Red / 255.0f, value.Green / 255.0f, value.Blue / 255.0f, value.Alpha / 255.0f };
-    if (ImGui::ColorEdit3(labelText, (float*)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel))
+    ImVec4 color = variable.get().ToImColor();
+    if (ImGui::ColorEdit3(labelText, (float*)&color.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel))
     {
         variable.set(color);
         return true;
     }
     
     ImGui::SameLine();
-    ImGui::Text(labelText);
+    ImGui::TextUnformatted(labelText);
 
     return false;
 }
