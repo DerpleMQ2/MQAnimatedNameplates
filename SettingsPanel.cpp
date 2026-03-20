@@ -85,6 +85,18 @@ bool RenderOption(Ui::ConfigVariable<T>& variable, const char* labelText)
     return false;
 }
 
+void RenderTestGroup(Ui::TestConfigGroup& group)
+{
+    ImGui::PushID(&group);
+    ImGui::Separator();
+    ImGui::Text("Group Name: %s", group.getKey().c_str());
+    RenderOption(group.TestInt, "Test int");
+    RenderOption(group.TestBool, "Test bool");
+    RenderOption(group.TestFloat, "Test float");
+    RenderOption(group.TestColor, "Test color");
+    ImGui::PopID();
+}
+
 class SettingsPanel
 {
 public:
@@ -205,6 +217,13 @@ public:
         ImGui::NewLine();
         RenderOption(config.ScaleFactor, "Overall Scale Factor", sliderLabelWidth, "%.2f");
         RenderOption(config.MaxCalculatedScaleFactor, "Max Scale Factor", sliderLabelWidth, "%.2f");
+
+        ImGui::NewLine();
+
+        ImGui::Text("Test Settings Groups");
+
+        RenderTestGroup(config.TestGroup1);
+        RenderTestGroup(config.TestGroup2);
     }
 
     std::vector<Ui::AnimatedTabState> tabs;

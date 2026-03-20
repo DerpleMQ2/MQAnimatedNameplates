@@ -50,64 +50,106 @@ concept EnumTraitsConcept = requires(T v)
     { config_enum_traits<T>::values() } -> std::same_as<const std::vector<std::pair<T, std::string>>&>;
 };
 
-class ConfigContainer
+///////////////////////////////////////////////////////////////////////////////
+
+class ConfigContainerBase
+{
+public:
+    ConfigContainerBase();
+    virtual ~ConfigContainerBase();
+
+    ConfigContainerBase(ConfigContainerBase&&) noexcept;
+    ConfigContainerBase& operator=(ConfigContainerBase&&) noexcept;
+
+    ConfigContainerBase(const ConfigContainerBase&) = delete;
+    ConfigContainerBase& operator=(const ConfigContainerBase&) = delete;
+
+    void RegisterVariable(ConfigVariableBase*);
+    void UnregisterVariable(ConfigVariableBase*);
+
+    virtual void UpdateVariable(const ConfigVariableBase& variable) = 0;
+    virtual void SetDirty(bool dirty) = 0;
+    virtual YAML::Node GetNode() = 0;
+
+protected:
+    std::vector<ConfigVariableBase*> m_variables;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+class ConfigContainer : public ConfigContainerBase
 {
 public:
     ConfigContainer();
-    ConfigContainer(YAML::Node configNode);
 
-    void Register(ConfigVariableBase* variable);
+    ConfigContainer(ConfigContainer&&) noexcept;
+    ConfigContainer& operator=(ConfigContainer&&) noexcept;
 
-    void Update(const ConfigVariableBase& variable);
+    virtual void UpdateVariable(const ConfigVariableBase& variable) override;
+    virtual YAML::Node GetNode() override;
+
+    virtual void SetDirty(bool dirty) override;
     bool IsDirty() const { return m_dirty; }
 
     void SaveConfig(const std::string& fileName);
     void LoadConfig(const std::string& fileName);
 
-    template <typename T>
-    void Store(const std::string& key, const T& value)
-    {
-        m_configNode[key] = value;
-    }
-
-    template <typename T>
-    bool Load(const std::string& key, T& value)
-    {
-        if (auto node = m_configNode[key])
-        {
-            try
-            {
-                value = node.as<T>();
-                return true;
-            }
-            catch (const YAML::BadConversion&)
-            {
-                return false;
-            }
-        }
-
-        return false;
-    }
-
 private:
-    std::vector<ConfigVariableBase*> m_registry;
     YAML::Node m_configNode;
     bool m_dirty = false;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 class ConfigVariableBase
 {
-public:
-    ConfigVariableBase(ConfigContainer& container);
+    friend class ConfigContainerBase;
 
-    virtual ~ConfigVariableBase() = default;
+public:
+    ConfigVariableBase(ConfigContainerBase* container, std::string keyName);
+    virtual ~ConfigVariableBase();
+
+    ConfigVariableBase(ConfigVariableBase&&) noexcept;
+    ConfigVariableBase& operator=(ConfigVariableBase&&) noexcept;
+
+    ConfigVariableBase(const ConfigContainerBase&) = delete;
+    ConfigVariableBase& operator=(const ConfigVariableBase&) = delete;
 
     virtual void Load(const YAML::Node& source) = 0;
-    virtual void Store(YAML::Node& target) const = 0;
+    virtual bool Store(YAML::Node& target) const = 0;
+
+    const std::string& getKey() const noexcept { return m_keyName; }
 
 protected:
-    ConfigContainer& m_container;
+    ConfigContainerBase* m_container;
+    std::string m_keyName;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+class ConfigGroup 
+    : public ConfigContainerBase
+    , public ConfigVariableBase
+{
+public:
+    ConfigGroup(ConfigContainerBase& container, std::string keyName);
+    virtual ~ConfigGroup() override;
+
+    ConfigGroup(ConfigGroup&&) noexcept;
+    ConfigGroup& operator=(ConfigGroup&&) noexcept;
+
+    // ConfigContainerBase
+    virtual void UpdateVariable(const ConfigVariableBase& variable) override;
+    virtual void SetDirty(bool dirty) override;
+    virtual YAML::Node GetNode() override;
+
+    // ConfigVariableBase
+    virtual void Load(const YAML::Node& source) override;
+    virtual bool Store(YAML::Node& target) const override;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 // Base traits for simple types that can be directly converted to/from YAML.
 template <typename T, typename U = T>
@@ -215,6 +257,9 @@ struct VariableTraits<T> : EnumVariableTraits<T> {};
 template <typename T> requires std::is_same_v<T, mq::MQColor>
 struct VariableTraits<T> : ColorVariableTraits {};
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
 template <typename T, typename Traits = VariableTraits<T>>
 class BasicConfigVariable : public ConfigVariableBase
 {
@@ -223,15 +268,11 @@ public:
     using ValueType = TraitsType::ValueType;
     using StorageType = TraitsType::StorageType;
 
-    BasicConfigVariable(ConfigContainer& container, const char* key, const ValueType& defaultValue)
-        : ConfigVariableBase(container)
-        , m_key(key)
+    BasicConfigVariable(ConfigContainerBase& container, std::string keyName, const ValueType& defaultValue)
+        : ConfigVariableBase(&container, std::move(keyName))
         , m_value(defaultValue)
     {
     }
-
-    BasicConfigVariable(const BasicConfigVariable&) = delete;
-    BasicConfigVariable& operator=(const BasicConfigVariable&) = delete;
 
     BasicConfigVariable& operator=(const ValueType& v)
     {
@@ -242,28 +283,28 @@ public:
     operator const ValueType& () const noexcept { return m_value; }
 
     const ValueType& get() const noexcept { return m_value; }
-    const std::string& getKey() const noexcept { return m_key; }
 
     void set(const ValueType& v)
     {
         if (set_internal(v))
         {
-            m_container.Update(*this);
+            m_container->UpdateVariable(*this);
         }
     }
 
-    virtual void Store(YAML::Node& yamlNode) const override final
+    virtual bool Store(YAML::Node& yamlNode) const override final
     {
-        yamlNode[m_key] = TraitsType::convert_to_storage(m_value);
+        yamlNode[m_keyName] = TraitsType::convert_to_storage(m_value);
+        return true;
     }
 
     virtual void Load(const YAML::Node& yamlNode) override final
     {
-        if (auto node = yamlNode[m_key])
+        if (auto node = yamlNode[m_keyName])
         {
             try
             {
-                set_internal(TraitsType::convert_to_value(node.as<StorageType>()));
+                set_internal(TraitsType::convert_to_value(node.template as<StorageType>()));
             }
             catch (const YAML::BadConversion&)
             {
@@ -278,7 +319,6 @@ protected:
         return TraitsType::set_value(m_value, v);
     }
 
-    const std::string m_key;
     ValueType m_value;
 };
 
@@ -286,12 +326,12 @@ template <detail::arithmetic T>
 class NumericConfigVariable : public BasicConfigVariable<T>
 {
 public:
-    NumericConfigVariable(ConfigContainer& container, const char* key, T defaultValue)
+    NumericConfigVariable(ConfigContainerBase& container, const char* key, T defaultValue)
         : BasicConfigVariable<T>(container, key, defaultValue)
     {
     }
 
-    NumericConfigVariable(ConfigContainer& container, const char* key, T defaultValue, T minValue, T maxValue)
+    NumericConfigVariable(ConfigContainerBase& container, const char* key, T defaultValue, T minValue, T maxValue)
         : BasicConfigVariable<T>(container, key, defaultValue)
         , m_minValue(minValue)
         , m_maxValue(maxValue)
@@ -331,7 +371,5 @@ class ConfigVariable<T> : public NumericConfigVariable<T>
 {
     using NumericConfigVariable<T>::NumericConfigVariable;
 };
-
-
 
 } // namespace Ui

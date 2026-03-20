@@ -41,6 +41,20 @@ struct config_enum_traits<HPBarStyle>
     }
 };
 
+class TestConfigGroup : public ConfigGroup
+{
+public:
+    TestConfigGroup(ConfigContainer& container, std::string name)
+        : ConfigGroup(container, std::move(name))
+    {
+    }
+
+    ConfigVariable<int> TestInt{ *this, "TestInt", 123, 0, 100 };
+    ConfigVariable<bool> TestBool{ *this, "TestBool", false };
+    ConfigVariable<float> TestFloat{ *this, "TestFloat", 1.0, 0.0, 10.0f };
+    ConfigVariable<mq::MQColor> TestColor{ *this, "TestColor", mq::MQColor(255,255,255) };
+};
+
 class Config
 {
     Config();
@@ -126,6 +140,10 @@ public:
     ConfigVariable<mq::MQColor> CustomColor4{ m_container, "CustomColor4", mq::MQColor(255,255,255) };
     ConfigVariable<mq::MQColor> CustomColor5{ m_container, "CustomColor5", mq::MQColor(255,255,255) };
     ConfigVariable<mq::MQColor> CustomColor6{ m_container, "CustomColor6", mq::MQColor(255,255,255) };
+
+    // Testing
+    TestConfigGroup TestGroup1{ m_container, "TestGroup1" };
+    TestConfigGroup TestGroup2{ m_container, "TestGroup2" };
 };
 
 } // namespace Ui
