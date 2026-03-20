@@ -131,13 +131,14 @@ void RenderNameplateConfigGroup(Ui::NameplateConfigGroup& group, const char* lab
         ImGui::NewLine();
 
         RenderOption(group.BarRounding, "Bar Rounding", sliderLabelWidth, "%.1f");
+        RenderOption(group.ColorAlphaModifier, "Bar Alpha Modifier", sliderLabelWidth, "%.2f");
         RenderOption(group.DrawBarBorders, "Draw Bar Borders");
-        ImGui::SameLine();
         ImGui::BeginDisabled(!group.DrawBarBorders);
+        ImGui::Indent();
         RenderOption(group.BarBordersColor, "Bar Border Color");
         RenderOption(group.BarBorderThickness, "Bar Border Thickness", sliderLabelWidth, "%.1f");
+        ImGui::Unindent();
         ImGui::EndDisabled();
-        RenderOption(group.ColorAlphaModifier, "Bar Alpha Modifier", sliderLabelWidth, "%.2f");
         
         ImGui::NewLine();
 
