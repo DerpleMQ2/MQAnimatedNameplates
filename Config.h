@@ -92,6 +92,17 @@ public:
     ConfigVariable<float> MaxCalculatedScaleFactor{ *this, "MaxCalculatedScaleFactor", 1.10f, 0.1f, 10.0f };
 };
 
+class NameplateStylesContainer : public ConfigGroup
+{
+public:    NameplateStylesContainer(ConfigContainer& container, std::string name)
+    : ConfigGroup(container, std::move(name))
+    {
+    }
+    
+    ConfigVariable<uint32_t> StyleCount{ *this, "StyleCount", 0 };
+    std::map<uint32_t, NameplateStyleConfigGroup> StyleDefinitionsMap;
+};
+
 class NameplateConfigGroup : public ConfigGroup
 {
 public:
@@ -166,7 +177,7 @@ public:
     ConfigVariable<mq::MQColor> ColorRangeHigh{ m_container, "ColorRangeHigh", mq::MQColor(51,230,51) };
 
     // Styles
-    std::vector<NameplateStyleConfigGroup> NameplateStyles;
+    NameplateStylesContainer NameplateStyles{ m_container, "NameplateStyles"};
 
     // Testing
     std::vector<TestConfigGroup> TestGroups;

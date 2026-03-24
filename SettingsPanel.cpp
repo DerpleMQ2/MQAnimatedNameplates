@@ -8,6 +8,7 @@
 #include "mq/Plugin.h"
 
 #include <algorithm>
+#include <ranges>
 #include <cmath>
 
 using namespace eqlib;
@@ -100,7 +101,7 @@ void ResolveNameplateLabels()
 {
     // setup the new vector of labels
     s_NameplateStyleLabels.clear();
-    for (auto& style : Ui::Config::Get().NameplateStyles)
+    for (auto& style : Ui::Config::Get().NameplateStyles.StyleDefinitionsMap | std::views::values)
     {
         s_NameplateStyleLabels.push_back(style.getKey());
     }
@@ -210,20 +211,25 @@ void RenderNameplateStyleConfigGroup(Ui::NameplateStyleConfigGroup& group, const
 
 Ui::NameplateStyleConfigGroup& Ui::NameplateConfigGroup::GetStyle()
 {
+    auto& config = Config::Get();
+
     // lazy init default.
-    if (Config::Get().NameplateStyles.empty())
+    if (config.NameplateStyles.StyleDefinitionsMap.empty())
     {
         // ensure there's always at least one style to reference
-        Config::Get().NameplateStyles.emplace_back(Config::Get().GetContainer(), "Nameplate Style Default");
+        config.NameplateStyles.StyleDefinitionsMap.try_emplace(0, config.NameplateStyles, "Nameplate Style Default");
+        config.NameplateStyles.StyleCount.set(config.NameplateStyles.StyleDefinitionsMap.size());
         ResolveNameplateLabels();
     }
 
-    if (NameplateConfigStyle.get() >= Config::Get().NameplateStyles.size())
+    const auto& it = config.NameplateStyles.StyleDefinitionsMap.find(NameplateConfigStyle);
+    if (it == config.NameplateStyles.StyleDefinitionsMap.end())
     {
         NameplateConfigStyle.set(0);
+        return config.NameplateStyles.StyleDefinitionsMap.begin()->second;
     }
 
-    return Config::Get().NameplateStyles[NameplateConfigStyle.get()];
+    return it->second;
 }
 
 class SettingsPanel
@@ -286,14 +292,15 @@ public:
     {
         Ui::Config& config = Ui::Config::Get();
 
-        for (Ui::NameplateStyleConfigGroup& style : config.NameplateStyles)
+        for (auto& style : Ui::Config::Get().NameplateStyles.StyleDefinitionsMap | std::views::values)
         {
             RenderNameplateStyleConfigGroup(style, style.getKey().c_str());
         }
 
         if (ImGui::Button("Add New Style"))
         {
-            config.NameplateStyles.emplace_back(config.GetContainer(), fmt::format("Nameplate Style {}", config.NameplateStyles.size()));
+            config.NameplateStyles.StyleDefinitionsMap.try_emplace(config.NameplateStyles.StyleDefinitionsMap.size(), config.NameplateStyles, fmt::format("Nameplate Style {}", config.NameplateStyles.StyleDefinitionsMap.size()));
+            config.NameplateStyles.StyleCount.set(config.NameplateStyles.StyleDefinitionsMap.size());
             ResolveNameplateLabels();
         }
     }
