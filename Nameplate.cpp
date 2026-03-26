@@ -112,8 +112,8 @@ void Nameplate::Render(const ImVec2& center_pos, const ImVec2& frameSize, float 
 
     m_targetPercent = std::clamp(percent, 0.0f, 100.0f) / 100.f;
 
-    m_smoothPercent = iam_tween_float(m_idHash, pct_id, m_targetPercent * 100.0f, 0.5f,
-        iam_ease_preset(iam_ease_linear), iam_policy_crossfade, dt, m_targetPercent * 100.0f) / 100.0f;
+    m_smoothPercent = iam_tween_float(m_idHash, pct_id, m_targetPercent, 0.5f,
+        iam_ease_preset(iam_ease_linear), iam_policy_crossfade, dt, m_targetPercent);
 
     if (m_pTextureBar && m_pTextureBar->IsValid())
     {
