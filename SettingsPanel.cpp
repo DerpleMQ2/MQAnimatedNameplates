@@ -247,7 +247,7 @@ void Ui::NameplateStylesContainer::Load(const YAML::Node& source)
         for (auto pair : GetNode())
         {
             std::string key = pair.first.as<std::string>();
-            if (key.compare("NPC Default") != 0 && key.compare("PC Default") != 0)
+            if (!mq::string_equals(key, "NPC Default") && !mq::string_equals(key, "PC Default"))
             {
                 StyleDefinitions.emplace_back(*this, key);
                 StyleDefinitions.back().Load(GetNode());
@@ -275,7 +275,7 @@ void Ui::NameplateStylesContainer::DeleteStyle(const char* name)
     std::string nameString{ name };
     // put this in first becuase 0 == Default when size == 1
     std::erase_if(StyleDefinitions, [nameString](const auto& item) {
-        return item.getKey().compare(nameString) == 0; // Replace with your condition
+        return item.getKey().compare(nameString) == 0;
         });    
     
     GetNode().remove(nameString.c_str());

@@ -258,7 +258,7 @@ void NameplateCommandHandler(PlayerClient*, const char* szLine) {
     else {
         char arg1[MAX_STRING] = { 0 };
         GetArg(arg1, szLine, 0);
-        if (ci_equals(arg1, "reload", true))
+        if (mq::string_equals(arg1, "reload"))
         {
             WriteChatf("\aw[\agNameplates\aw]: \atReloaded Config!");
             Ui::Config::Get().LoadSettings();
