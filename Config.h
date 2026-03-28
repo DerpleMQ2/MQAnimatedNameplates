@@ -28,6 +28,12 @@ enum NameplateType
     NameplateType_Count
 };
 
+enum DefaultConfigStyles
+{
+    DefaultConfigStyleNPC = 0,
+    DefaultConfigStylePC = 1
+};
+
 template <>
 struct config_enum_traits<HPBarStyle>
 {
@@ -60,12 +66,13 @@ public:
 class NameplateStyleDefinition : public ConfigGroup
 {
 public:
-    NameplateStyleDefinition(ConfigContainerBase& container, std::string name)
+    NameplateStyleDefinition(ConfigContainerBase& container, std::string name, HPBarStyle defaultBarStyle = HPBarStyle_ConColor)
         : ConfigGroup(container, std::move(name))
+        , HPBarStyle{ *this, "HPBarStyle", defaultBarStyle }
     {
     }
 
-    ConfigVariable<HPBarStyle> HPBarStyle{ *this, "HPBarStyle", HPBarStyle_ColorRange };
+    ConfigVariable<HPBarStyle> HPBarStyle;
     ConfigVariable<mq::MQColor> CustomColor{ *this, "Custom Color", mq::MQColor{ 255,255,255,255} };
 
     ConfigVariable<bool> ShowLevel{ *this, "ShowLevel", true };
@@ -110,13 +117,16 @@ public:    NameplateStylesContainer(ConfigContainerBase& container, std::string 
 class NameplateConfigGroup : public ConfigGroup
 {
 public:
-    NameplateConfigGroup(ConfigContainer& container, std::string name)
-        : ConfigGroup(container, std::move(name))
+    NameplateConfigGroup(ConfigContainer& container, std::string name, bool defaultEnabled, DefaultConfigStyles defaultStyle)
+        : ConfigGroup(container
+        , std::move(name))
+        , Render{ *this, "Render", defaultEnabled }
+        , NameplateConfigStyle{ *this, "NameplateConfigStyle", static_cast<uint32_t>(defaultStyle) }
     {
     }
 
-    ConfigVariable<bool> Render{ *this, "Render", true };
-    ConfigVariable<uint32_t> NameplateConfigStyle{ *this, "NameplateConfigStyle", 0 };
+    ConfigVariable<bool> Render;
+    ConfigVariable<uint32_t> NameplateConfigStyle;
 
     NameplateStyleDefinition& GetStyle();
 };
@@ -145,12 +155,12 @@ private:
 
 public:
     // Per-type options
-    NameplateConfigGroup TargetNameplateOptions{ m_container, "TargetNameplateOptions" };
-    NameplateConfigGroup SelfNameplateOptions{ m_container, "SelfNameplateOptions" };
-    NameplateConfigGroup GroupNameplateOptions{ m_container, "GroupNameplateOptions" };
-    NameplateConfigGroup HatersNameplateOptions{ m_container, "HatersNameplateOptions" };
-    NameplateConfigGroup NPCNameplateOptions{ m_container, "NPCNameplateOptions" };
-    NameplateConfigGroup PCNameplateOptions{ m_container, "PCNameplateOptions" };
+    NameplateConfigGroup TargetNameplateOptions{ m_container, "TargetNameplateOptions", true, DefaultConfigStyleNPC };
+    NameplateConfigGroup SelfNameplateOptions{ m_container, "SelfNameplateOptions", true, DefaultConfigStylePC };
+    NameplateConfigGroup GroupNameplateOptions{ m_container, "GroupNameplateOptions", false, DefaultConfigStylePC };
+    NameplateConfigGroup HatersNameplateOptions{ m_container, "HatersNameplateOptions", true, DefaultConfigStyleNPC };
+    NameplateConfigGroup NPCNameplateOptions{ m_container, "NPCNameplateOptions", false, DefaultConfigStyleNPC };
+    NameplateConfigGroup PCNameplateOptions{ m_container, "PCNameplateOptions", false, DefaultConfigStylePC };
 
     // Optional display
     ConfigVariable<bool> ShowGuild{ m_container, "ShowGuild", false };

@@ -251,16 +251,35 @@ static bool DrawNameplate(Ui::Nameplate* pNameplate, bool alwaysVisible = false)
     return true;
 }
 
+void NameplateCommandHandler(PlayerClient*, const char* szLine) {
+    if (szLine[0] == 0) {
+        return;
+    }
+    else {
+        char arg1[MAX_STRING] = { 0 };
+        GetArg(arg1, szLine, 0);
+        if (ci_equals(arg1, "reload", true))
+        {
+            WriteChatf("\aw[\agNameplates\aw]: \atReloaded Config!");
+            Ui::Config::Get().LoadSettings();
+        }
+    }
+}
+
 PLUGIN_API void InitializePlugin()
 {
+    WriteChatf("\agNameplates\aw by \a-t***\ay Derple, brainiac \a-t*** \agLoaded! ");
+
     context = iam_context_create();
     AddSettingsPanel("plugins/Nameplates", Ui::RenderSettingsPanel);
+    AddCommand("/nameplates", NameplateCommandHandler);
 }
 
 PLUGIN_API void ShutdownPlugin()
 {
     iam_context_destroy(context);
     RemoveSettingsPanel("plugins/Nameplates");
+    RemoveCommand("/nameplates");
 }
 
 PLUGIN_API void OnUpdateImGui()

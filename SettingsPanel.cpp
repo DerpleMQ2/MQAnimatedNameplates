@@ -235,8 +235,11 @@ Ui::NameplateStyleDefinition& Ui::NameplateConfigGroup::GetStyle()
 void Ui::NameplateStylesContainer::Load(const YAML::Node& source)
 {
     ConfigGroup::Load(source);
-
-    StyleDefinitions.emplace_back(*this, "Default");
+    
+    StyleDefinitions.clear();
+    StyleDefinitions.emplace_back(*this, "NPC Default", HPBarStyle_ConColor);
+    StyleDefinitions.back().Load(GetNode());
+    StyleDefinitions.emplace_back(*this, "PC Default", HPBarStyle_ColorRange);
     StyleDefinitions.back().Load(GetNode());
     // now load in all the custom configs.
     if (GetNode().IsMap())
@@ -244,7 +247,7 @@ void Ui::NameplateStylesContainer::Load(const YAML::Node& source)
         for (auto pair : GetNode())
         {
             std::string key = pair.first.as<std::string>();
-            if (key.compare("Default") != 0)
+            if (key.compare("NPC Default") != 0 && key.compare("PC Default") != 0)
             {
                 StyleDefinitions.emplace_back(*this, key);
                 StyleDefinitions.back().Load(GetNode());
