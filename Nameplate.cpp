@@ -357,10 +357,16 @@ void Nameplate::RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVe
 
     if (fillWidth > 0)
     {
-        ImU32 edge = iam_get_blended_color(ImGui::ColorConvertU32ToFloat4(colLow), ImGui::ColorConvertU32ToFloat4(colHigh), 0.5, iam_color_space::iam_col_oklab).ToImU32();
+        ImVec4 colMid = iam_get_blended_color(ImGui::ColorConvertU32ToFloat4(colLow), ImGui::ColorConvertU32ToFloat4(colHigh), 0.5, iam_color_space::iam_col_oklab);
+        ImVec4 edge = iam_get_blended_color(ImGui::ColorConvertU32ToFloat4(colLow), colMid, m_smoothPercent / 0.5f, iam_color_space::iam_col_oklab);
+
+        if (m_smoothPercent >= 0.5f)
+        {
+            edge = iam_get_blended_color(colMid, ImGui::ColorConvertU32ToFloat4(colHigh), (m_smoothPercent - 0.5f) / 0.5f, iam_color_space::iam_col_oklab);
+        }
 
         ImU32 topLeft = colLow;
-        ImU32 topRight = edge;
+        ImU32 topRight = edge.ToImU32();
         ImU32 bottomLeft = topLeft;
         ImU32 bottomRight = topRight;
 
