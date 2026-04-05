@@ -311,7 +311,6 @@ public:
         ImGui::SeparatorText("Color Range Colors");
         ImGui::NewLine();
         RenderOption(config.ColorRangeLow, "Color Low");
-        RenderOption(config.ColorRangeMid, "Color Mid");
         RenderOption(config.ColorRangeHigh, "Color High");
 
         ImGui::NewLine();

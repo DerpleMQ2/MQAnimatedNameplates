@@ -186,7 +186,6 @@ public:
 
     // Layout / sizes
     ConfigVariable<mq::MQColor> ColorRangeLow{ m_container, "ColorRangeLow", mq::MQColor(204,51,51) };
-    ConfigVariable<mq::MQColor> ColorRangeMid{ m_container, "ColorRangeMid", mq::MQColor(230,179,51) };
     ConfigVariable<mq::MQColor> ColorRangeHigh{ m_container, "ColorRangeHigh", mq::MQColor(51,230,51) };
 
     // Styles

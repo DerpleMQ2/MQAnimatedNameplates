@@ -34,8 +34,7 @@ public:
 
     void Render(const ImVec2& center_pos, const ImVec2& frameSize, float scale);
 
-    void RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVec2& barSize, ImU32 colLow,
-        ImU32 colMid, ImU32 colHigh);
+    void RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVec2& barSize, ImU32 colLow, ImU32 colHigh);
 
     void RenderNameplateText(const ImVec2& left_pos, ImU32 color, const char* text);
 
@@ -58,7 +57,7 @@ public:
 
     void SetNameplateType(Ui::NameplateType type);
     Ui::NameplateType GetNameplateType() const { return m_nameplateType; }
-    void GetNameplateColors(ImU32& lowOut, ImU32& midOut, ImU32& highOut) const;
+    void GetNameplateColors(ImU32& lowOut, ImU32& highOut) const;
 
     std::chrono::steady_clock::time_point GetLastRenderTime() const { return m_lastRenderTime; }
     eqlib::PlayerClient* GetSpawn() const { return m_pSpawn; }

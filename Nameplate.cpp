@@ -124,12 +124,11 @@ void Nameplate::Render(const ImVec2& center_pos, const ImVec2& frameSize, float 
     else
     {
         ImU32 hpLow;
-        ImU32 hpMid;
         ImU32 hpHigh;
 
-        GetNameplateColors(hpLow, hpMid, hpHigh);
+        GetNameplateColors(hpLow, hpHigh);
 
-        RenderAnimatedPercentageBar(offset_center_pos, barSize, hpLow, hpMid, hpHigh);
+        RenderAnimatedPercentageBar(offset_center_pos, barSize, hpLow, hpHigh);
     }
 
     if (m_pTextureFrame && m_pTextureFrame->IsValid())
@@ -321,8 +320,7 @@ void Nameplate::RenderNameplateText(const ImVec2& left_pos, ImU32 color, const c
     drawList->AddText(left_pos, color, text);
 }
 
-void Nameplate::RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVec2& barSize,
-                                            ImU32 colLow, ImU32 colMid, ImU32 colHigh)
+void Nameplate::RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVec2& barSize, ImU32 colLow, ImU32 colHigh)
 {
     ImDrawList* drawList = Nameplate::GetDrawList();
     bool currentTarget = IsCurrentTarget();
@@ -359,25 +357,7 @@ void Nameplate::RenderAnimatedPercentageBar(const ImVec2& center_pos, const ImVe
 
     if (fillWidth > 0)
     {
-        ImU32 edge;
-
-        if (colHigh == colLow && colLow == colMid)
-        {
-            edge = colLow;
-        }
-        else
-        {
-            if (m_smoothPercent < 0.5f)
-            {
-                float t = m_smoothPercent / 0.5f;
-                edge    = ImLerp(colLow, colMid, t);
-            }
-            else
-            {
-                float t = (m_smoothPercent - 0.5f) / 0.5f;
-                edge    = ImLerp(colMid, colHigh, t);
-            }
-        }
+        ImU32 edge = iam_get_blended_color(ImGui::ColorConvertU32ToFloat4(colLow), ImGui::ColorConvertU32ToFloat4(colHigh), 0.5, iam_color_space::iam_col_oklab).ToImU32();
 
         ImU32 topLeft = colLow;
         ImU32 topRight = edge;
@@ -526,30 +506,31 @@ float Nameplate::GetDistplaceToPlayer() const
     return GetDistance(m_pSpawn->Y, m_pSpawn->X, pControlledPlayer->Y, pControlledPlayer->X);
 }
 
-void Nameplate::GetNameplateColors(ImU32& lowOut, ImU32& midOut, ImU32& highOut) const
+void Nameplate::GetNameplateColors(ImU32& lowOut, ImU32& highOut) const
 {
     Ui::Config& config = Ui::Config::Get();
 
     bool currentTarget = IsCurrentTarget();
     lowOut = ReduceAlpha(config.ColorRangeLow.get().ToImU32(), m_pConfigGroup->GetStyle().ColorAlphaModifier);
-    midOut = ReduceAlpha(config.ColorRangeMid.get().ToImU32(), m_pConfigGroup->GetStyle().ColorAlphaModifier);
     highOut = ReduceAlpha(config.ColorRangeHigh.get().ToImU32(), m_pConfigGroup->GetStyle().ColorAlphaModifier);
 
     switch (m_pConfigGroup->GetStyle().HPBarStyle)
     {
     case HPBarStyle_Custom:
-        lowOut = midOut = highOut = m_pConfigGroup->GetStyle().CustomColor.get().ToImU32();
+        lowOut = highOut = m_pConfigGroup->GetStyle().CustomColor.get().ToImU32();
         break;
     case HPBarStyle_ConColor:
-        lowOut = midOut = highOut = m_conColor.ToImU32();
+        lowOut = highOut = m_conColor.ToImU32();
         break;
     case HPBarStyle_ColorRange:
         break;
-    default: break;
+    case HPBarStyle_Invalid:
+        break;
+    default: 
+        break;
     }
 
     lowOut = ReduceAlpha(lowOut,m_pConfigGroup->GetStyle().ColorAlphaModifier);
-    midOut = ReduceAlpha(midOut, m_pConfigGroup->GetStyle().ColorAlphaModifier);
     highOut = ReduceAlpha(highOut, m_pConfigGroup->GetStyle().ColorAlphaModifier);
 } 
 
